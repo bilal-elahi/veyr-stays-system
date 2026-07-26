@@ -1,237 +1,142 @@
-let appData = { bookings: [], expenses: [], investments: [] };
-
 document.addEventListener("DOMContentLoaded", () => {
-    fetchData();
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Safely set dates if inputs exist
-    const bookingDate = document.getElementById('bookingDateInput');
-    const expenseDate = document.getElementById('expenseDateInput');
-    const investmentDate = document.getElementById('investmentDateInput');
-    
-    if (bookingDate) bookingDate.value = today;
-    if (expenseDate) expenseDate.value = today;
-    if (investmentDate) investmentDate.value = today;
+    fetchDashboardData();
+
+    // Modal Handling Logic
+    setupModal("openBookingModal", "bookingModal", "close-modal");
+    setupModal("openFinanceModal", "financeModal", "close-modal");
+
+    // Form submissions
+    document.getElementById("bookingForm").addEventListener("submit", handleBookingSubmit);
+    document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
 });
 
-async function fetchData() {
+function setupModal(openBtnId, modalId, closeClass) {
+    const openBtn = document.getElementById(openBtnId);
+    const modal = document.getElementById(modalId);
+    if (!openBtn || !modal) return;
+
+    openBtn.addEventListener("click", () => modal.style.display = "flex");
+    
+    modal.querySelectorAll(`.${closeClass}`).forEach(el => {
+        el.addEventListener("click", () => modal.style.display = "none");
+    });
+
+    window.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    });
+}
+
+async function fetchDashboardData() {
     try {
-        const response = await fetch('/api/data');
-        if (!response.ok) throw new Error('Failed to fetch data');
-        appData = await response.json();
-        renderDashboard(appData);
-    } catch (err) {
-        console.error("Failed to load data:", err);
+        const response = await fetch('/api/data'); // Adjust endpoint if needed
+        const data = await response.json();
+        
+        populateTables(data);
+        calculateMetrics(data);
+    } catch (error) {
+        console.error("Error fetching dashboard data:", error);
     }
 }
 
-function renderDashboard(data) {
-    const bookingTbody = document.getElementById('bookingsTableBody');
-    const expenseTbody = document.getElementById('expensesTableBody');
-    const investmentTbody = document.getElementById('investmentsTableBody');
-
-    if (!bookingTbody || !expenseTbody || !investmentTbody) return;
-
-    bookingTbody.innerHTML = '';
-    expenseTbody.innerHTML = '';
-    investmentTbody.innerHTML = '';
-
-    let totalRev = 0;
-    let totalExp = 0;
-    let totalInv = 0;
-
-    // Render Bookings
-    if (!data.bookings || data.bookings.length === 0) {
-        bookingTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-2);">No bookings found.</td></tr>`;
-    } else {
-        data.bookings.forEach(b => {
-            totalRev += Number(b.payment_amount || 0);
-            bookingTbody.innerHTML += `
-                <tr>
-                    <td>${b.created_at || '-'}</td>
-                    <td><strong>${b.guest_name || '-'}</strong></td>
-                    <td>${b.reference_name || '-'}</td>
-                    <td>${b.reference_contact || '-'}</td>
-                    <td class="text-success">Rs. ${b.payment_amount || 0}</td>
-                    <td>
-                        ${b.cnic_front ? `<a href="/secure_uploads/${b.cnic_front}" target="_blank">Front</a>` : ''} 
-                        ${b.cnic_back ? `| <a href="/secure_uploads/${b.cnic_back}" target="_blank">Back</a>` : ''}
-                    </td>
-                </tr>
-            `;
-        });
+function populateTables(data) {
+    // Populate Bookings
+    const bookingTbody = document.querySelector("#bookingsTable tbody");
+    if (bookingTbody && data.bookings) {
+        bookingTbody.innerHTML = data.bookings.map(b => `
+            <tr>
+                <td>${b.guestName}</td>
+                <td>${b.guestContact}</td>
+                <td>${b.roomNumber}</td>
+                <td>${b.checkInDate}</td>
+                <td>${b.checkOutDate}</td>
+                <td>${b.amount} PKR</td>
+                <td>${b.idCardInfo ? `<a href="${b.idCardInfo}" target="_blank">View ID</a>` : 'N/A'}</td>
+                <td><button onclick="deleteBooking('${b.id}')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>
+            </tr>
+        `).join('');
     }
 
-    // Render Expenses
-    if (!data.expenses || data.expenses.length === 0) {
-        expenseTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 24px; color: var(--text-2);">No expenses recorded.</td></tr>`;
-    } else {
-        data.expenses.forEach(e => {
-            totalExp += Number(e.amount || 0);
-            expenseTbody.innerHTML += `
-                <tr>
-                    <td>${e.expense_date || '-'}</td>
-                    <td><strong>${e.expense_title || '-'}</strong></td>
-                    <td class="text-danger">Rs. ${e.amount || 0}</td>
-                </tr>
-            `;
-        });
+    // Populate Expenses
+    const expenseTbody = document.querySelector("#expensesTable tbody");
+    if (expenseTbody && data.expenses) {
+        expenseTbody.innerHTML = data.expenses.map(e => `
+            <tr>
+                <td>${e.category}</td>
+                <td>${e.description || '-'}</td>
+                <td>${e.amount} PKR</td>
+                <td>${e.date}</td>
+            </tr>
+        `).join('');
     }
 
-    // Render Investments
-    if (!data.investments || data.investments.length === 0) {
-        investmentTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 24px; color: var(--text-2);">No investments recorded.</td></tr>`;
-    } else {
-        data.investments.forEach(i => {
-            totalInv += Number(i.amount || 0);
-            investmentTbody.innerHTML += `
-                <tr>
-                    <td>${i.investment_date || '-'}</td>
-                    <td><strong>${i.investor_name || '-'}</strong></td>
-                    <td class="text-info">Rs. ${i.amount || 0}</td>
-                </tr>
-            `;
-        });
+    // Populate Investments
+    const investmentTbody = document.querySelector("#investmentsTable tbody");
+    if (investmentTbody && data.investments) {
+        investmentTbody.innerHTML = data.investments.map(i => `
+            <tr>
+                <td>${i.category}</td>
+                <td>${i.description || '-'}</td>
+                <td>${i.amount} PKR</td>
+                <td>${i.date}</td>
+            </tr>
+        `).join('');
     }
+}
 
-    let netProfit = totalRev - totalExp;
+function calculateMetrics(data) {
+    const totalRev = (data.bookings || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const totalExp = (data.expenses || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const totalInv = (data.investments || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const netProf = totalRev - totalExp;
 
-    const setInnerText = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = val;
+    document.getElementById("totalRevenue").innerText = `${totalRev.toLocaleString()} PKR`;
+    document.getElementById("totalExpenses").innerText = `${totalExp.toLocaleString()} PKR`;
+    document.getElementById("totalInvestments").innerText = `${totalInv.toLocaleString()} PKR`;
+    document.getElementById("netProfit").innerText = `${netProf.toLocaleString()} PKR`;
+}
+
+async function handleBookingSubmit(e) {
+    e.preventDefault();
+    const payload = {
+        guestName: document.getElementById("guestName").value,
+        guestContact: document.getElementById("guestContact").value,
+        roomNumber: document.getElementById("roomNumber").value,
+        checkInDate: document.getElementById("checkInDate").value,
+        checkOutDate: document.getElementById("checkOutDate").value,
+        amount: document.getElementById("bookingAmount").value,
+        idCardInfo: document.getElementById("idCardInfo").value
     };
 
-    setInnerText('stat-total-bookings', data.bookings ? data.bookings.length : 0);
-    setInnerText('stat-revenue', `Rs. ${totalRev}`);
-    setInnerText('stat-expenses', `Rs. ${totalExp}`);
-    setInnerText('stat-investment', `Rs. ${totalInv}`);
-    setInnerText('stat-profit', `Rs. ${netProfit}`);
-}
-
-async function submitBooking(event) {
-    event.preventDefault();
-    const formData = new FormData(document.getElementById('bookingForm'));
-    const response = await fetch('/api/bookings', { method: 'POST', body: formData });
-    const result = await response.json();
-    if (result.success) {
-        closeModal('bookingModal');
-        document.getElementById('bookingForm').reset();
-        fetchData();
-    } else { alert(result.error); }
-}
-
-async function submitExpense(event) {
-    event.preventDefault();
-    const formData = new FormData(document.getElementById('expenseForm'));
-    const data = Object.fromEntries(formData.entries());
-    const response = await fetch('/api/expenses', {
+    await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
     });
-    const result = await response.json();
-    if (result.success) {
-        closeModal('expenseModal');
-        document.getElementById('expenseForm').reset();
-        fetchData();
-    } else { alert(result.error); }
+
+    document.getElementById("bookingModal").style.display = "none";
+    e.target.reset();
+    fetchDashboardData();
 }
 
-async function submitInvestment(event) {
-    event.preventDefault();
-    const formData = new FormData(document.getElementById('investmentForm'));
-    const data = Object.fromEntries(formData.entries());
-    const response = await fetch('/api/investments', {
+async function handleFinanceSubmit(e) {
+    e.preventDefault();
+    const type = document.getElementById("financeType").value;
+    const payload = {
+        category: document.getElementById("financeCategory").value,
+        description: document.getElementById("financeDescription").value,
+        amount: document.getElementById("financeAmount").value,
+        date: document.getElementById("financeDate").value
+    };
+
+    const endpoint = type === 'expense' ? '/api/expenses' : '/api/investments';
+
+    await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    const result = await response.json();
-    if (result.success) {
-        closeModal('investmentModal');
-        document.getElementById('investmentForm').reset();
-        fetchData();
-    } else { alert(result.error); }
-}
-
-function filterData() {
-    const searchInput = document.getElementById('searchInput');
-    const timeFilter = document.getElementById('timeFilter');
-    const dateFilter = document.getElementById('dateFilter');
-
-    const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-    const timeFilterVal = timeFilter ? timeFilter.value : 'all';
-    const dateQuery = dateFilter ? dateFilter.value : '';
-
-    const now = new Date();
-    
-    function matchesTime(dateStr) {
-        if (!dateStr) return true;
-        const itemDate = new Date(dateStr);
-
-        if (dateQuery) {
-            return dateStr === dateQuery;
-        }
-
-        if (timeFilterVal === 'this_week') {
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay());
-            startOfWeek.setHours(0,0,0,0);
-            return itemDate >= startOfWeek;
-        }
-
-        if (timeFilterVal === 'this_month') {
-            return itemDate.getFullYear() === now.getFullYear() && itemDate.getMonth() === now.getMonth();
-        }
-
-        if (timeFilterVal === 'last_month') {
-            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            return itemDate >= lastMonth && itemDate < thisMonth;
-        }
-
-        return true;
-    }
-
-    const filteredBookings = (appData.bookings || []).filter(b => {
-        const name = (b.guest_name || '').toLowerCase();
-        const ref = (b.reference_name || '').toLowerCase();
-        const matchesName = name.includes(searchQuery) || ref.includes(searchQuery);
-        return matchesName && matchesTime(b.created_at || b.check_in_date);
+        body: JSON.stringify(payload)
     });
 
-    const filteredExpenses = (appData.expenses || []).filter(e => {
-        return matchesTime(e.expense_date);
-    });
-
-    const filteredInvestments = (appData.investments || []).filter(i => {
-        return matchesTime(i.investment_date);
-    });
-
-    renderDashboard({ 
-        bookings: filteredBookings, 
-        expenses: filteredExpenses, 
-        investments: filteredInvestments 
-    });
-}
-
-function resetFilters() {
-    const searchInput = document.getElementById('searchInput');
-    const timeFilter = document.getElementById('timeFilter');
-    const dateFilter = document.getElementById('dateFilter');
-
-    if (searchInput) searchInput.value = '';
-    if (timeFilter) timeFilter.value = 'all';
-    if (dateFilter) dateFilter.value = '';
-    renderDashboard(appData);
-}
-
-function openModal(modalId) { 
-    const el = document.getElementById(modalId);
-    if (el) el.style.display = 'block'; 
-}
-
-function closeModal(modalId) { 
-    const el = document.getElementById(modalId);
-    if (el) el.style.display = 'none'; 
+    document.getElementById("financeModal").style.display = "none";
+    e.target.reset();
+    fetchDashboardData();
 }
