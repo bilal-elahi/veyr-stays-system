@@ -862,3 +862,28 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
   .card:hover,
   button:hover:not(:disabled) { transform: none !important; }
 }
+/* --- Final Mobile Layout Fixes --- */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 12px !important;
+    overflow-x: hidden !important;
+  }
+
+  .controls-bar {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .controls-bar input,
+  .controls-bar select,
+  .controls-bar button {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+}
