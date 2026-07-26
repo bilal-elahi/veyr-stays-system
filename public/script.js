@@ -18,7 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("searchBookingInput").addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase().trim();
         const filtered = allBookingsCache.filter(b => 
-            b.guestName && b.guestName.toLowerCase().includes(searchTerm)
+            (b.guest_name && b.guest_name.toLowerCase().includes(searchTerm)) ||
+            (b.guestName && b.guestName.toLowerCase().includes(searchTerm))
         );
         renderBookingsTable(filtered);
     });
@@ -45,43 +46,55 @@ function setupModal(openBtnId, modalId, closeClass) {
     });
 }
 
-// Automatically check if today is the 1st of the month and add fixed recurring bills if not already added
 async function checkAndApplyMonthlyBills() {
-    const config = JSON.parse(localStorage.getItem("veyr_monthly_bills_config") || "null");
-    if (!config) return;
-
-    const now = new Date();
-    const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const lastApplied = localStorage.getItem("veyr_last_applied_month");
-
-    // If today is the 1st day of the month (or testing) and hasn't been added for this month yet
-    if (now.getDate() === 1 && lastApplied !== currentYearMonth) {
-        const dateStr = now.toISOString().split('T')[0];
+    try {
+        const response = await fetch('/api/data');
+        const data = await response.json();
+        const config = data.monthlyConfig;
         
-        const autoBills = [
-            { category: "Rent", description: "Automated Monthly Rent", amount: config.rent, date: dateStr },
-            { category: "Electric Bill", description: "Automated Monthly Electricity", amount: config.electric, date: dateStr },
-            { category: "Internet Bill", description: "Automated Monthly Internet", amount: config.internet, date: dateStr }
-        ];
+        if (!config || (!config.rent && !config.electric && !config.internet)) return;
 
-        for (const bill of autoBills) {
-            if (bill.amount > 0) {
-                await fetch('/api/expenses', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bill)
-                });
+        const now = new Date();
+        const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const lastApplied = localStorage.getItem("veyr_last_applied_month");
+
+        if (now.getDate() === 1 && lastApplied !== currentYearMonth) {
+            const dateStr = now.toISOString().split('T')[0];
+            
+            const autoBills = [
+                { expense_title: "Rent - Automated Monthly Rent", amount: config.rent, expense_date: dateStr },
+                { expense_title: "Electric Bill - Automated Monthly Electricity", amount: config.electric, expense_date: dateStr },
+                { expense_title: "Internet Bill - Automated Monthly Internet", amount: config.internet, expense_date: dateStr }
+            ];
+
+            for (const bill of autoBills) {
+                if (bill.amount > 0) {
+                    await fetch('/api/expenses', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bill)
+                    });
+                }
             }
+            localStorage.setItem("veyr_last_applied_month", currentYearMonth);
         }
-        localStorage.setItem("veyr_last_applied_month", currentYearMonth);
+    } catch (err) {
+        console.error("Error auto-applying monthly bills:", err);
     }
 }
 
-function loadExistingMonthlyConfig() {
-    const config = JSON.parse(localStorage.getItem("veyr_monthly_bills_config") || "{}");
-    document.getElementById("monthlyRent").value = config.rent || "";
-    document.getElementById("monthlyElectric").value = config.electric || "";
-    document.getElementById("monthlyInternet").value = config.internet || "";
+async function loadExistingMonthlyConfig() {
+    try {
+        const response = await fetch('/api/data');
+        const data = await response.json();
+        if (data.monthlyConfig) {
+            document.getElementById("monthlyRent").value = data.monthlyConfig.rent || "";
+            document.getElementById("monthlyElectric").value = data.monthlyConfig.electric || "";
+            document.getElementById("monthlyInternet").value = data.monthlyConfig.internet || "";
+        }
+    } catch (err) {
+        console.error("Error loading config:", err);
+    }
 }
 
 async function handleMonthlyBillsSubmit(e) {
@@ -92,16 +105,19 @@ async function handleMonthlyBillsSubmit(e) {
         internet: Number(document.getElementById("monthlyInternet").value || 0)
     };
 
-    localStorage.setItem("veyr_monthly_bills_config", JSON.stringify(config));
+    await fetch('/api/config/monthly', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+    });
     
-    // Immediately inject them for the current month if configured
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     
     const bills = [
-        { category: "Rent", description: "Monthly Fixed Rent", amount: config.rent, date: dateStr },
-        { category: "Electric Bill", description: "Monthly Fixed Electric Bill", amount: config.electric, date: dateStr },
-        { category: "Internet Bill", description: "Monthly Fixed Internet Bill", amount: config.internet, date: dateStr }
+        { expense_title: "Rent - Monthly Fixed Rent", amount: config.rent, expense_date: dateStr },
+        { expense_title: "Electric Bill - Monthly Fixed Electric Bill", amount: config.electric, expense_date: dateStr },
+        { expense_title: "Internet Bill - Monthly Fixed Internet Bill", amount: config.internet, expense_date: dateStr }
     ];
 
     for (const bill of bills) {
@@ -141,21 +157,36 @@ function renderBookingsTable(bookings) {
         return;
     }
 
-    bookingTbody.innerHTML = bookings.map(b => `
-        <tr>
-            <td>${b.guestName}</td>
-            <td>${b.guestContact}</td>
-            <td>${b.roomNumber}</td>
-            <td>${b.checkInDate ? b.checkInDate.replace('T', ' ') : ''}</td>
-            <td>${b.checkOutDate ? b.checkOutDate.replace('T', ' ') : ''}</td>
-            <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; background: ${b.bookingType === 'Short Booking' ? '#fef3c7; color: #d97706;' : '#e0e7ff; color: #4338ca;}">${b.bookingType || 'Full Day'}</span></td>
-            <td>${b.amount} PKR</td>
-            <td>${b.bookingReference || 'N/A'}</td>
-            <td>${b.idCardFront ? `<a href="${b.idCardFront}" target="_blank">View Front</a>` : 'N/A'}</td>
-            <td>${b.idCardBack ? `<a href="${b.idCardBack}" target="_blank">View Back</a>` : 'N/A'}</td>
-            <td><button onclick="deleteBooking('${b.id}')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>
-        </tr>
-    `).join('');
+    bookingTbody.innerHTML = bookings.map(b => {
+        const name = b.guest_name || b.guestName || 'N/A';
+        const contact = b.reference_contact || b.guestContact || 'N/A';
+        const room = b.roomNumber || 'N/A';
+        const checkIn = b.check_in_date || b.checkInDate || '';
+        const checkOut = b.checkOutDate || '';
+        const type = b.bookingType || 'Full Day';
+        const amount = b.payment_amount !== undefined ? b.payment_amount : (b.amount || 0);
+        const ref = b.reference_name || b.bookingReference || 'N/A';
+        const frontImg = b.cnic_front || b.idCardFront;
+        const backImg = b.cnic_back || b.idCardBack;
+        const frontLink = frontImg ? `<a href="${frontImg.startsWith('http') || frontImg.startsWith('data') ? frontImg : '/secure_uploads/' + frontImg}" target="_blank">View Front</a>` : 'N/A';
+        const backLink = backImg ? `<a href="${backImg.startsWith('http') || backImg.startsWith('data') ? backImg : '/secure_uploads/' + backImg}" target="_blank">View Back</a>` : 'N/A';
+
+        return `
+            <tr>
+                <td>${name}</td>
+                <td>${contact}</td>
+                <td>${room}</td>
+                <td>${checkIn.replace('T', ' ')}</td>
+                <td>${checkOut.replace('T', ' ')}</td>
+                <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; background: ${type === 'Short Booking' ? '#fef3c7; color: #d97706;' : '#e0e7ff; color: #4338ca;}">${type}</span></td>
+                <td>${amount} PKR</td>
+                <td>${ref}</td>
+                <td>${frontLink}</td>
+                <td>${backLink}</td>
+                <td><button onclick="deleteBooking('${b.id}')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function populateFinanceTables(data) {
@@ -163,10 +194,10 @@ function populateFinanceTables(data) {
     if (expenseTbody && data.expenses) {
         expenseTbody.innerHTML = data.expenses.map(e => `
             <tr>
-                <td>${e.category}</td>
+                <td>${e.expense_title || e.category || '-'}</td>
                 <td>${e.description || '-'}</td>
                 <td>${e.amount} PKR</td>
-                <td>${e.date}</td>
+                <td>${e.expense_date || e.date || e.created_at}</td>
             </tr>
         `).join('');
     }
@@ -175,17 +206,17 @@ function populateFinanceTables(data) {
     if (investmentTbody && data.investments) {
         investmentTbody.innerHTML = data.investments.map(i => `
             <tr>
-                <td>${i.category}</td>
+                <td>${i.investor_name || i.category || '-'}</td>
                 <td>${i.description || '-'}</td>
                 <td>${i.amount} PKR</td>
-                <td>${i.date}</td>
+                <td>${i.investment_date || i.date || i.created_at}</td>
             </tr>
         `).join('');
     }
 }
 
 function calculateMetrics(data) {
-    const totalRev = (data.bookings || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const totalRev = (data.bookings || []).reduce((sum, item) => sum + Number(item.payment_amount !== undefined ? item.payment_amount : (item.amount || 0)), 0);
     const totalExp = (data.expenses || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const totalInv = (data.investments || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const netProf = totalRev - totalExp;
@@ -202,42 +233,26 @@ async function handleBookingSubmit(e) {
     const frontInput = document.getElementById("idCardFrontFile");
     const backInput = document.getElementById("idCardBackFile");
     
-    let frontUrl = "";
-    let backUrl = "";
+    const formData = new FormData();
+    formData.append("guest_name", document.getElementById("guestName").value);
+    formData.append("reference_contact", document.getElementById("guestContact").value);
+    formData.append("roomNumber", document.getElementById("roomNumber").value);
+    formData.append("check_in", document.getElementById("checkInDate").value);
+    formData.append("checkOutDate", document.getElementById("checkOutDate").value);
+    formData.append("bookingType", document.getElementById("bookingType").value);
+    formData.append("payment_amount", Number(document.getElementById("bookingAmount").value));
+    formData.append("reference_name", document.getElementById("bookingReference").value);
 
     if (frontInput.files && frontInput.files[0]) {
-        frontUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (evt) => resolve(evt.target.result);
-            reader.readAsDataURL(frontInput.files[0]);
-        });
+        formData.append("cnic_front", frontInput.files[0]);
     }
-
     if (backInput.files && backInput.files[0]) {
-        backUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (evt) => resolve(evt.target.result);
-            reader.readAsDataURL(backInput.files[0]);
-        });
+        formData.append("cnic_back", backInput.files[0]);
     }
-
-    const payload = {
-        guestName: document.getElementById("guestName").value,
-        guestContact: document.getElementById("guestContact").value,
-        roomNumber: document.getElementById("roomNumber").value,
-        checkInDate: document.getElementById("checkInDate").value,
-        checkOutDate: document.getElementById("checkOutDate").value,
-        bookingType: document.getElementById("bookingType").value,
-        amount: document.getElementById("bookingAmount").value,
-        bookingReference: document.getElementById("bookingReference").value,
-        idCardFront: frontUrl,
-        idCardBack: backUrl
-    };
 
     await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
     });
 
     document.getElementById("bookingModal").style.display = "none";
@@ -248,20 +263,32 @@ async function handleBookingSubmit(e) {
 async function handleFinanceSubmit(e) {
     e.preventDefault();
     const type = document.getElementById("financeType").value;
-    const payload = {
-        category: document.getElementById("financeCategory").value,
-        description: document.getElementById("financeDescription").value,
-        amount: document.getElementById("financeAmount").value,
-        date: document.getElementById("financeDate").value
-    };
+    
+    if (type === 'expense') {
+        const payload = {
+            expense_title: document.getElementById("financeCategory").value + (document.getElementById("financeDescription").value ? ' - ' + document.getElementById("financeDescription").value : ''),
+            amount: Number(document.getElementById("financeAmount").value),
+            expense_date: document.getElementById("financeDate").value
+        };
 
-    const endpoint = type === 'expense' ? '/api/expenses' : '/api/investments';
+        await fetch('/api/expenses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } else {
+        const payload = {
+            investor_name: document.getElementById("financeCategory").value,
+            amount: Number(document.getElementById("financeAmount").value),
+            investment_date: document.getElementById("financeDate").value
+        };
 
-    await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+        await fetch('/api/investments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    }
 
     document.getElementById("financeModal").style.display = "none";
     e.target.reset();
