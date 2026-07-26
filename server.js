@@ -28,7 +28,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     else console.log('Connected to SQLite database at:', dbPath);
 });
 
-// Create tables for Bookings, Expenses, and Investments
+// Create tables for Bookings, Expenses, Investments, and Monthly Config
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,6 +59,13 @@ db.serialize(() => {
         investment_date TEXT,
         created_at TEXT
     )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS monthly_config (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        rent REAL,
+        electric REAL,
+        internet REAL
+    )`);
 });
 
 const storage = multer.diskStorage({
@@ -67,7 +74,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// API: Get All Financial Data (Bookings, Expenses, Investments)
+// API: Get All Financial Data, Bookings, and Monthly Config
 app.get('/api/data', (req, res) => {
     db.all("SELECT * FROM bookings ORDER BY id DESC", [], (err, bookings) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -78,8 +85,28 @@ app.get('/api/data', (req, res) => {
             db.all("SELECT * FROM investments ORDER BY id DESC", [], (err, investments) => {
                 if (err) return res.status(500).json({ error: err.message });
 
-                res.json({ bookings, expenses, investments });
+                db.get("SELECT * FROM monthly_config ORDER BY id DESC LIMIT 1", [], (err, monthlyConfig) => {
+                    if (err) return res.status(500).json({ error: err.message });
+
+                    res.json({ bookings, expenses, investments, monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 } });
+                });
             });
+        });
+    });
+});
+
+// API: Save / Update Monthly Bills Configuration
+app.post('/api/config/monthly', (req, res) => {
+    const { rent, electric, internet } = req.body;
+    
+    // Replace or insert latest config row
+    db.run(`DELETE FROM monthly_config`, [], (err) => {
+        if (err) return res.json({ success: false, error: err.message });
+
+        db.run(`INSERT INTO monthly_config (rent, electric, internet) VALUES (?, ?, ?)`, 
+        [rent || 0, electric || 0, internet || 0], function(err) {
+            if (err) return res.json({ success: false, error: err.message });
+            res.json({ success: true, monthlyConfig: { rent, electric, internet } });
         });
     });
 });
