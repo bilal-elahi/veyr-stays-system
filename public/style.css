@@ -801,3 +801,36 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
   .card:hover,
   button:hover:not(:disabled) { transform: none !important; }
 }
+/* ==========================================================================
+   Mobile Table Visibility Fixes
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .table-container,
+  .table-responsive {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .table-responsive table {
+    width: 100% !important;
+    min-width: 600px !important; /* Keeps table columns properly spaced for horizontal swiping */
+  }
+
+  .table-responsive tr,
+  .table-responsive td,
+  .table-responsive th {
+    display: table-cell !important;
+    visibility: visible !important;
+  }
+
+  .table-responsive tbody tr {
+    display: table-row !important;
+  }
+}
