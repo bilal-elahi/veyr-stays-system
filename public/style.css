@@ -745,3 +745,51 @@ tbody tr:hover td {
     color: var(--text-primary);
 }
 ```
+/* ==========================================================================
+   Veyr Stays System — Mobile Responsiveness Optimization
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Prevent horizontal overflow on mobile screens */
+  body {
+    overflow-x: hidden;
+    padding: 10px !important;
+  }
+
+  /* Stack dashboard cards and containers cleanly */
+  .container, 
+  .dashboard-grid, 
+  .stats-container {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force table responsive wrappers to scroll smoothly */
+  .table-responsive,
+  .table-container {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: var(--card-bg, #1e2130);
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  /* Optimize input fields and buttons for touch targets */
+  input, select, button, .btn {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 8px;
+  }
+
+  /* Make modals mobile-friendly and fit within phone screens */
+  .modal-content, 
+  .modal-dialog {
+    width: 95% !important;
+    margin: 10px auto !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
