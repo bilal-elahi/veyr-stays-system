@@ -1,4 +1,3 @@
-```css
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after {
@@ -348,12 +347,13 @@ body {
     border-radius: 20px;
 }
 
-/* Table */
+/* Table Wrap */
 .table-wrap {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -380,6 +380,7 @@ tbody td {
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border);
     transition: var(--transition);
+    white-space: nowrap;
 }
 
 tbody tr:last-child td { border-bottom: none; }
@@ -461,6 +462,7 @@ tbody tr:hover td {
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    padding: 12px;
 }
 
 .modal-overlay.active {
@@ -552,7 +554,7 @@ tbody tr:hover td {
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 16px; /* Prevents auto-zoom on mobile devices */
     transition: var(--transition);
 }
 
@@ -681,30 +683,10 @@ tbody tr:hover td {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-/* Responsive */
-@media (max-width: 1200px) {
-    .metrics { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 900px) {
-    .dashboard { padding: 20px; }
-    .header { flex-direction: column; gap: 16px; align-items: flex-start; }
-    .header-actions { flex-wrap: wrap; }
-    .metrics { grid-template-columns: repeat(2, 1fr); }
-    .split-grid { grid-template-columns: 1fr; }
-    .controls { flex-direction: column; }
-    .search-box { min-width: 100%; }
-}
-
-@media (max-width: 600px) {
-    .metrics { grid-template-columns: 1fr; }
-    .metric-value { font-size: 24px; }
-}
 
 /* View CNIC Modal */
 .cnic-preview {
@@ -744,52 +726,31 @@ tbody tr:hover td {
     border-color: var(--accent-indigo);
     color: var(--text-primary);
 }
-```
+
 /* ==========================================================================
-   Veyr Stays System — Mobile Responsiveness Optimization
+   Veyr Stays System — Mobile Responsiveness Optimizations
    ========================================================================== */
 
-@media (max-width: 768px) {
-  /* Prevent horizontal overflow on mobile screens */
-  body {
-    overflow-x: hidden;
-    padding: 10px !important;
-  }
+@media (max-width: 1200px) {
+    .metrics { grid-template-columns: repeat(3, 1fr); }
+}
 
-  /* Stack dashboard cards and containers cleanly */
-  .container, 
-  .dashboard-grid, 
-  .stats-container {
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
+@media (max-width: 900px) {
+    .dashboard { padding: 20px 16px; }
+    .header { flex-direction: column; gap: 16px; align-items: flex-start; }
+    .header-actions { flex-wrap: wrap; width: 100%; }
+    .header-actions .btn { flex: 1; justify-content: center; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .split-grid { grid-template-columns: 1fr; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .search-box { min-width: 100%; }
+    .filter-select, .filter-date { width: 100%; }
+}
 
-  /* Force table responsive wrappers to scroll smoothly */
-  .table-responsive,
-  .table-container {
-    display: block !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    background: var(--card-bg, #1e2130);
-    border-radius: 8px;
-    padding: 4px;
-  }
-
-  /* Optimize input fields and buttons for touch targets */
-  input, select, button, .btn {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    margin-bottom: 8px;
-  }
-
-  /* Make modals mobile-friendly and fit within phone screens */
-  .modal-content, 
-  .modal-dialog {
-    width: 95% !important;
-    margin: 10px auto !important;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
+@media (max-width: 600px) {
+    .dashboard { padding: 12px 10px; }
+    .metrics { grid-template-columns: 1fr; }
+    .metric-value { font-size: 24px; }
+    .modal { max-width: 100%; margin: 0; border-radius: 12px 12px 0 0; max-height: 85vh; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
 }
