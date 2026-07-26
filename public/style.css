@@ -1,12 +1,12 @@
 /* ==========================================================================
-   Finance Dashboard — Modernized v2
+   Finance Dashboard — Modernized v2 (Mobile Scrollable Tables Fix)
    Inter (UI) · JetBrains Mono (currency values)
    ========================================================================== */
 
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
   /* Surfaces */
-  --bg:             #060b18;
+  --bg:            #060b18;
   --bg-grad:        radial-gradient(ellipse 120% 80% at 15% -5%,  #0f1e3d 0%, #060b18 55%),
                     radial-gradient(ellipse 60%  50% at 85% 105%, #0b1530 0%, transparent 60%);
   --surface-1:      #0d1627;
@@ -66,7 +66,6 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  /* Critical fix: prevents any child from expanding the page width */
   overflow-x: hidden;
 }
 
@@ -77,12 +76,11 @@ body {
   color: var(--text-1);
   background: var(--bg-grad);
   background-color: var(--bg);
-  /* Use scroll instead of fixed — fixed breaks on iOS Safari */
   background-attachment: scroll;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   min-height: 100dvh;
-  overflow-x: hidden; /* second guard */
+  overflow-x: hidden;
 }
 
 ::selection { background: var(--blue-dim); color: var(--text-1); }
@@ -109,7 +107,6 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: clamp(14px, 3vw, 36px) clamp(14px, 3vw, 28px) clamp(48px, 8vw, 72px);
-  /* Ensure it never causes horizontal scroll */
   width: 100%;
 }
 
@@ -130,7 +127,6 @@ body {
   position: sticky;
   top: 10px;
   z-index: 50;
-  /* Make sure the sticky header never overflows */
   min-width: 0;
 }
 
@@ -279,7 +275,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   cursor: default;
 }
 
-/* Gradient accent bar */
 .card::before {
   content: '';
   position: absolute;
@@ -288,7 +283,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   background: var(--blue);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
 }
-/* Subtle glow in corner */
 .card::after {
   content: '';
   position: absolute;
@@ -309,8 +303,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   border-color: var(--border);
 }
 
-.card.revenue::before  { background: linear-gradient(90deg, var(--green), #0ef2ae); }
-.card.revenue::after   { background: var(--green); }
+.card.revenue::before   { background: linear-gradient(90deg, var(--green), #0ef2ae); }
+.card.revenue::after    { background: var(--green); }
 .card.expenses::before { background: linear-gradient(90deg, var(--red), #ff7a92); }
 .card.expenses::after  { background: var(--red); }
 .card.investment::before { background: linear-gradient(90deg, var(--cyan), #72e4ff); }
@@ -377,16 +371,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   border: 1px solid var(--border-soft);
   border-radius: var(--r-lg);
   box-shadow: var(--sh-md);
-  /* Wrap only when truly needed */
   flex-wrap: wrap;
-  /* Never overflow */
   min-width: 0;
 }
 
 .search-wrap {
   position: relative;
   flex: 1;
-  /* Prevent this from causing overflow */
   min-width: 0;
 }
 
@@ -416,14 +407,12 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .controls-bar input {
   width: 100%;
   padding: 10px 14px 10px 38px;
-  /* No min-width that could cause overflow */
 }
 
 .controls-bar select,
 .modal-select {
   padding: 10px 14px;
   cursor: pointer;
-  /* Prevent overflow on small screens */
   max-width: 100%;
 }
 
@@ -436,7 +425,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 
 .controls-bar input::placeholder { color: var(--text-3); }
 
-/* ── Table Container ─────────────────────────────────────────────────────── */
+/* ── Table Container & Horizontal Scroll Fix ─────────────────────────────── */
 .table-container {
   background: var(--surface-1);
   border-radius: var(--r-lg);
@@ -444,7 +433,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   box-shadow: var(--sh-md);
   padding: var(--sp-6);
   margin-bottom: var(--sp-7);
-  /* Critical: contain children */
   min-width: 0;
   overflow: hidden;
 }
@@ -473,12 +461,11 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   font-weight: 600;
 }
 
-/* ── Tables ──────────────────────────────────────────────────────────────── */
+/* ── Tables & Smooth Mobile Swipe Fix ────────────────────────────────────── */
 .table-responsive {
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  /* Don't let this grow past container */
+  overflow-x: auto; /* Enables horizontal sliding */
+  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling for iOS */
   min-width: 0;
 }
 
@@ -486,8 +473,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  /* Tables need a min-width to not collapse on mobile scrollable view */
-  min-width: 520px;
+  min-width: 650px; /* Forces layout width to maintain proper columns without crunching */
 }
 
 th, td {
@@ -495,6 +481,7 @@ th, td {
   border-bottom: 1px solid var(--border-soft);
   color: var(--text-1);
   vertical-align: middle;
+  white-space: nowrap; /* Prevents text from breaking weirdly during scroll */
 }
 
 td:last-child, th:last-child { border-right: none; }
@@ -506,7 +493,6 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.07em;
   background: transparent;
-  white-space: nowrap;
 }
 
 tbody tr { transition: background-color var(--t-fast); }
@@ -578,12 +564,11 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
   display: flex;
   gap: var(--sp-6);
   flex-wrap: wrap;
-  /* Prevent shift */
   min-width: 0;
 }
 .table-container.half {
   flex: 1 1 340px;
-  min-width: 0; /* override old min-width that caused overflow */
+  min-width: 0;
 }
 
 /* ── Modal ───────────────────────────────────────────────────────────────── */
@@ -616,7 +601,6 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
   padding: var(--sp-7);
   position: relative;
   animation: modal-in var(--t-base) var(--ease-out);
-  /* critical: don't overflow viewport */
   box-sizing: border-box;
 }
 
@@ -706,7 +690,6 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
   .table-container.half {
     flex: 1 1 100%;
   }
-  /* Hide date in header at tablet to save space */
   .header-meta { display: none; }
 }
 
@@ -714,15 +697,17 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
    Responsive — Mobile ≤ 768
    ========================================================================== */
 @media (max-width: 768px) {
-  /* ── Header ── */
+  .dashboard-container {
+    padding: 12px !important;
+    overflow-x: hidden !important;
+  }
+
   .main-header {
-    /* Stack brand + actions */
     flex-wrap: wrap;
-    position: static; /* avoid sticky on mobile causing shift */
+    position: static;
     gap: var(--sp-3);
     padding: var(--sp-4);
     border-radius: var(--r-lg);
-    /* Stretch to fill without overflowing */
     width: 100%;
   }
 
@@ -739,75 +724,35 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
     justify-content: center;
   }
 
-  /* ── Metrics ── */
   .metrics-grid {
     grid-template-columns: 1fr 1fr;
     gap: var(--sp-3);
   }
 
-  /* ── Controls bar ── */
   .controls-bar {
     flex-direction: column;
     align-items: stretch;
     padding: var(--sp-4);
     gap: var(--sp-3);
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
-  .controls-bar select { width: 100%; }
-
-  /* ── Tables: switch to stacked card layout ── */
-  .table-responsive.stack-on-mobile table { min-width: unset; }
-
-  .table-responsive.stack-on-mobile table,
-  .table-responsive.stack-on-mobile thead,
-  .table-responsive.stack-on-mobile tbody,
-  .table-responsive.stack-on-mobile th,
-  .table-responsive.stack-on-mobile td,
-  .table-responsive.stack-on-mobile tr {
-    display: block;
+  .controls-bar select,
+  .controls-bar input,
+  .controls-bar button {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  .table-responsive.stack-on-mobile thead {
-    position: absolute;
-    width: 1px; height: 1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
+  /* Keep horizontal scrolling enabled smoothly on mobile instead of card stacking */
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .table-responsive.stack-on-mobile tbody tr {
-    margin-bottom: var(--sp-4);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--r-md);
-    overflow: hidden;
-    background: rgba(255,255,255,.015);
-  }
-  .table-responsive.stack-on-mobile tbody tr:last-child { margin-bottom: 0; }
-
-  .table-responsive.stack-on-mobile td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--sp-3);
-    text-align: right;
-    border-bottom: 1px solid var(--border-soft);
-    padding: 11px var(--sp-4);
-    min-height: 44px;
-  }
-  .table-responsive.stack-on-mobile td:last-child { border-bottom: none; }
-
-  .table-responsive.stack-on-mobile td::before {
-    content: attr(data-label);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-2);
-    text-align: left;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
-  /* ── Modal: bottom sheet ── */
+  /* Modal: bottom sheet */
   .modal.open {
     align-items: flex-end;
     justify-content: stretch;
@@ -833,21 +778,15 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
    ========================================================================== */
 @media (max-width: 480px) {
   .metrics-grid { grid-template-columns: 1fr; }
-
   .card { padding: var(--sp-5); }
-
   .table-container,
   .controls-bar {
     padding: var(--sp-4);
     border-radius: var(--r-md);
   }
-
   .main-header { border-radius: var(--r-md); }
-
-  /* Brand title shorter */
   .main-header h1 { font-size: 16px; }
   .header-badge   { display: none; }
-
   .close-btn { top: var(--sp-4); right: var(--sp-4); }
 }
 
@@ -861,29 +800,4 @@ td.num, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums
   }
   .card:hover,
   button:hover:not(:disabled) { transform: none !important; }
-}
-/* --- Final Mobile Layout Fixes --- */
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 12px !important;
-    overflow-x: hidden !important;
-  }
-
-  .controls-bar {
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .controls-bar input,
-  .controls-bar select,
-  .controls-bar button {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .table-responsive {
-    width: 100% !important;
-    overflow-x: auto !important;
-  }
 }
