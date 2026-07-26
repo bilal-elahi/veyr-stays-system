@@ -6,7 +6,7 @@ const cors = require('cors');
 const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -18,9 +18,14 @@ if (!fs.existsSync('./secure_uploads')) {
     fs.mkdirSync('./secure_uploads');
 }
 
-const db = new sqlite3.Database('./veyr_stays.db', (err) => {
+// Use Render's persistent directory if available, otherwise local path
+const dbPath = process.env.RENDER 
+    ? path.join('/opt/render/project/src', 'veyr_stays.db') 
+    : path.join(__dirname, 'veyr_stays.db');
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error('Database opening error: ' + err.message);
-    else console.log('Connected to SQLite database.');
+    else console.log('Connected to SQLite database at:', dbPath);
 });
 
 // Create tables for Bookings, Expenses, and Investments
@@ -82,8 +87,8 @@ app.get('/api/data', (req, res) => {
 // API: Add Booking
 app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_back' }]), (req, res) => {
     const { guest_name, reference_name, reference_contact, payment_amount, expense_amount, investment_amount, check_in } = req.body;
-    const cnic_front = req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
-    const cnic_back = req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
+    const cnic_front = req.files && req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
+    const cnic_back = req.files && req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
     const created_at = new Date().toISOString().split('T')[0];
 
     const query = `INSERT INTO bookings (guest_name, reference_name, reference_contact, payment_amount, expense_amount, investment_amount, check_in_date, cnic_front, cnic_back, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -119,5 +124,5 @@ app.post('/api/investments', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
