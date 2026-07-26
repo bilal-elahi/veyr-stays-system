@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veyr Stays Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <header class="main-header">
+            <h1>🏢 Veyr Stays Management</h1>
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="openModal('bookingModal')">+ Add Booking</button>
+                <button class="btn-warning" onclick="openModal('expenseModal')">+ Add Bill / Expense</button>
+                <button class="btn-info" onclick="openModal('investmentModal')">+ Add Investment</button>
+            </div>
+        </header>
+
+        <!-- Metrics Cards -->
+        <div class="metrics-grid">
+            <div class="card">
+                <h3>Total Bookings</h3>
+                <p id="stat-total-bookings">0</p>
+            </div>
+            <div class="card revenue">
+                <h3>Total Revenue</h3>
+                <p id="stat-revenue">Rs. 0</p>
+            </div>
+            <div class="card expenses">
+                <h3>Total Expenses (Bills)</h3>
+                <p id="stat-expenses">Rs. 0</p>
+            </div>
+            <div class="card investment">
+                <h3>Total Investment</h3>
+                <p id="stat-investment">Rs. 0</p>
+            </div>
+            <div class="card profit">
+                <h3>Net Profit</h3>
+                <p id="stat-profit">Rs. 0</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+            <input type="text" id="searchInput" placeholder="Search by Guest Name or Reference..." onkeyup="filterData()">
+            <select id="timeFilter" onchange="filterData()">
+                <option value="all">All Time</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+                <option value="last_month">Last Month</option>
+            </select>
+            <input type="date" id="dateFilter" onchange="filterData()">
+            <button class="btn-secondary" onclick="resetFilters()">Reset Filters</button>
+        </div>
+
+        <!-- Bookings Table -->
+        <div class="table-container">
+            <h3>Recent Guest Bookings</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Guest Name</th>
+                        <th>Reference</th>
+                        <th>Contact</th>
+                        <th>Payment Received</th>
+                        <th>CNIC Docs</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Expenses & Investments Summary Section -->
+        <div class="tables-split">
+            <div class="table-container half">
+                <h3>General Bills & Expenses (Rent, Bills, etc.)</h3>
+                <table>
+                    <thead>
+                        <tr><th>Date</th><th>Title</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody id="expensesTableBody"></tbody>
+                </table>
+            </div>
+            <div class="table-container half">
+                <h3>Investments</h3>
+                <table>
+                    <thead>
+                        <tr><th>Date</th><th>Investor</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody id="investmentsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('bookingModal')">&times;</span>
+            <h2>Add Guest Booking</h2>
+            <form id="bookingForm" onsubmit="submitBooking(event)">
+                <label>Guest Name:</label>
+                <input type="text" name="guest_name" required>
+                <label>Reference Name:</label>
+                <input type="text" name="reference_name" required>
+                <label>Reference Contact:</label>
+                <input type="text" name="reference_contact">
+                <label>Payment Amount (Revenue):</label>
+                <input type="number" name="payment_amount" value="0" required>
+                <label>Check-in Date:</label>
+                <input type="date" name="check_in" id="bookingDateInput" required>
+                <label>CNIC Front:</label>
+                <input type="file" name="cnic_front" accept="image/*" required>
+                <label>CNIC Back:</label>
+                <input type="file" name="cnic_back" accept="image/*" required>
+                <button type="submit" class="btn-primary full-width">Save Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('expenseModal')">&times;</span>
+            <h2>Add General Bill / Expense</h2>
+            <form id="expenseForm" onsubmit="submitExpense(event)">
+                <label>Expense Title (e.g. Apartment Rent, Electricity Bill, Internet):</label>
+                <input type="text" name="expense_title" required>
+                <label>Amount (Rs):</label>
+                <input type="number" name="amount" required>
+                <label>Date:</label>
+                <input type="date" name="expense_date" id="expenseDateInput" required>
+                <button type="submit" class="btn-warning full-width">Save Expense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Investment Modal -->
+    <div id="investmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('investmentModal')">&times;</span>
+            <h2>Add Capital Investment</h2>
+            <form id="investmentForm" onsubmit="submitInvestment(event)">
+                <label>Investor Name:</label>
+                <input type="text" name="investor_name" required>
+                <label>Amount (Rs):</label>
+                <input type="number" name="amount" required>
+                <label>Date:</label>
+                <input type="date" name="investment_date" id="investmentDateInput" required>
+                <button type="submit" class="btn-info full-width">Save Investment</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
