@@ -28,7 +28,7 @@ function setupModal(openBtnId, modalId, closeClass) {
 
 async function fetchDashboardData() {
     try {
-        const response = await fetch('/api/data'); // Adjust endpoint if needed
+        const response = await fetch('/api/data');
         const data = await response.json();
         
         populateTables(data);
@@ -50,6 +50,7 @@ function populateTables(data) {
                 <td>${b.checkInDate}</td>
                 <td>${b.checkOutDate}</td>
                 <td>${b.amount} PKR</td>
+                <td>${b.bookingReference || 'N/A'}</td>
                 <td>${b.idCardInfo ? `<a href="${b.idCardInfo}" target="_blank">View ID</a>` : 'N/A'}</td>
                 <td><button onclick="deleteBooking('${b.id}')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>
             </tr>
@@ -97,6 +98,19 @@ function calculateMetrics(data) {
 
 async function handleBookingSubmit(e) {
     e.preventDefault();
+    
+    const fileInput = document.getElementById("idCardFile");
+    let idCardUrl = "";
+
+    if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        idCardUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (uploadEvent) => resolve(uploadEvent.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
     const payload = {
         guestName: document.getElementById("guestName").value,
         guestContact: document.getElementById("guestContact").value,
@@ -104,7 +118,8 @@ async function handleBookingSubmit(e) {
         checkInDate: document.getElementById("checkInDate").value,
         checkOutDate: document.getElementById("checkOutDate").value,
         amount: document.getElementById("bookingAmount").value,
-        idCardInfo: document.getElementById("idCardInfo").value
+        bookingReference: document.getElementById("bookingReference").value,
+        idCardInfo: idCardUrl
     };
 
     await fetch('/api/bookings', {

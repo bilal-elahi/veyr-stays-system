@@ -49,6 +49,7 @@
                             <th>Check-In</th>
                             <th>Check-Out</th>
                             <th>Amount</th>
+                            <th>Reference</th>
                             <th>ID Card / Document</th>
                             <th>Actions</th>
                         </tr>
@@ -110,7 +111,8 @@
                 <div class="form-group"><label>Check-In Date</label><input type="date" id="checkInDate" required></div>
                 <div class="form-group"><label>Check-Out Date</label><input type="date" id="checkOutDate" required></div>
                 <div class="form-group"><label>Amount (PKR)</label><input type="number" id="bookingAmount" required></div>
-                <div class="form-group"><label>ID Card / Document Link or File Info</label><input type="text" id="idCardInfo"></div>
+                <div class="form-group"><label>Booking Reference / Source</label><input type="text" id="bookingReference" placeholder="e.g., Walk-in, Booking.com, Phone"></div>
+                <div class="form-group"><label>Upload ID Card Picture</label><input type="file" id="idCardFile" accept="image/*"></div>
                 <button type="submit" class="btn-primary">Save Booking</button>
             </form>
         </div>
