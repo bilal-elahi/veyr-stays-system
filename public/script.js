@@ -4,17 +4,14 @@ document.addEventListener("DOMContentLoaded", () => {
     checkAndApplyMonthlyBills();
     fetchDashboardData();
 
-    // Modal Handling Logic
     setupModal("openBookingModal", "bookingModal", "close-modal");
     setupModal("openMonthlyExpenseModal", "monthlyExpenseModal", "close-modal");
     setupModal("openFinanceModal", "financeModal", "close-modal");
 
-    // Form submissions
     document.getElementById("bookingForm").addEventListener("submit", handleBookingSubmit);
     document.getElementById("monthlyBillsForm").addEventListener("submit", handleMonthlyBillsSubmit);
     document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
 
-    // Search input listener
     document.getElementById("searchBookingInput").addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase().trim();
         const filtered = allBookingsCache.filter(b => 
@@ -55,7 +52,7 @@ async function checkAndApplyMonthlyBills() {
         if (!config || (!config.rent && !config.electric && !config.internet)) return;
 
         const now = new Date();
-        const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const currentYearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
         const lastApplied = localStorage.getItem("veyr_last_applied_month");
 
         if (now.getDate() === 1 && lastApplied !== currentYearMonth) {
@@ -153,7 +150,7 @@ function renderBookingsTable(bookings) {
     if (!bookingTbody) return;
 
     if (bookings.length === 0) {
-        bookingTbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: var(--text-muted);">No bookings found</td></tr>`;
+        bookingTbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
         return;
     }
 
@@ -168,50 +165,48 @@ function renderBookingsTable(bookings) {
         const ref = b.reference_name || b.bookingReference || 'N/A';
         const frontImg = b.cnic_front || b.idCardFront;
         const backImg = b.cnic_back || b.idCardBack;
-        const frontLink = frontImg ? `<a href="${frontImg.startsWith('http') || frontImg.startsWith('data') ? frontImg : '/secure_uploads/' + frontImg}" target="_blank">View Front</a>` : 'N/A';
-        const backLink = backImg ? `<a href="${backImg.startsWith('http') || backImg.startsWith('data') ? backImg : '/secure_uploads/' + backImg}" target="_blank">View Back</a>` : 'N/A';
+        const frontLink = frontImg ? '<a href="' + (frontImg.startsWith('http') || frontImg.startsWith('data') ? frontImg : '/secure_uploads/' + frontImg) + '" target="_blank">View Front</a>' : 'N/A';
+        const backLink = backImg ? '<a href="' + (backImg.startsWith('http') || backImg.startsWith('data') ? backImg : '/secure_uploads/' + backImg) + '" target="_blank">View Back</a>' : 'N/A';
 
-        return `
-            <tr>
-                <td>${name}</td>
-                <td>${contact}</td>
-                <td>${room}</td>
-                <td>${checkIn.replace('T', ' ')}</td>
-                <td>${checkOut.replace('T', ' ')}</td>
-                <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; background: ${type === 'Short Booking' ? '#fef3c7; color: #d97706;' : '#e0e7ff; color: #4338ca;}">${type}</span></td>
-                <td>${amount} PKR</td>
-                <td>${ref}</td>
-                <td>${frontLink}</td>
-                <td>${backLink}</td>
-                <td><button onclick="deleteBooking('${b.id}')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>
-            </tr>
-        `;
+        return '<tr>' +
+            '<td>' + name + '</td>' +
+            '<td>' + contact + '</td>' +
+            '<td>' + room + '</td>' +
+            '<td>' + checkIn.replace('T', ' ') + '</td>' +
+            '<td>' + checkOut.replace('T', ' ') + '</td>' +
+            '<td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; background: ' + (type === 'Short Booking' ? '#fef3c7; color: #d97706;' : '#e0e7ff; color: #4338ca;') + '">' + type + '</span></td>' +
+            '<td>' + amount + ' PKR</td>' +
+            '<td>' + ref + '</td>' +
+            '<td>' + frontLink + '</td>' +
+            '<td>' + backLink + '</td>' +
+            '<td><button onclick="deleteBooking(\'' + b.id + '\')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>' +
+            '</tr>';
     }).join('');
 }
 
 function populateFinanceTables(data) {
     const expenseTbody = document.querySelector("#expensesTable tbody");
     if (expenseTbody && data.expenses) {
-        expenseTbody.innerHTML = data.expenses.map(e => `
-            <tr>
-                <td>${e.expense_title || e.category || '-'}</td>
-                <td>${e.description || '-'}</td>
-                <td>${e.amount} PKR</td>
-                <td>${e.expense_date || e.date || e.created_at}</td>
-            </tr>
-        `).join('');
+        expenseTbody.innerHTML = data.expenses.map(e => 
+            '<tr>' +
+            '<td>' + (e.expense_title || e.category || '-') + '</td>' +
+            '<td>' + (e.description || '-') + '</td>' +
+            '<td>' + e.amount + ' PKR</td>' +
+            '<td>' + (e.expense_date || e.date || e.created_at) + '</td>' +
+            '</tr>'
+        ).join('');
     }
 
     const investmentTbody = document.querySelector("#investmentsTable tbody");
     if (investmentTbody && data.investments) {
-        investmentTbody.innerHTML = data.investments.map(i => `
-            <tr>
-                <td>${i.investor_name || i.category || '-'}</td>
-                <td>${i.description || '-'}</td>
-                <td>${i.amount} PKR</td>
-                <td>${i.investment_date || i.date || i.created_at}</td>
-            </tr>
-        `).join('');
+        investmentTbody.innerHTML = data.investments.map(i => 
+            '<tr>' +
+            '<td>' + (i.investor_name || i.category || '-') + '</td>' +
+            '<td>' + (i.description || '-') + '</td>' +
+            '<td>' + i.amount + ' PKR</td>' +
+            '<td>' + (i.investment_date || i.date || i.created_at) + '</td>' +
+            '</tr>'
+        ).join('');
     }
 }
 
@@ -221,10 +216,10 @@ function calculateMetrics(data) {
     const totalInv = (data.investments || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const netProf = totalRev - totalExp;
 
-    document.getElementById("totalRevenue").innerText = `${totalRev.toLocaleString()} PKR`;
-    document.getElementById("totalExpenses").innerText = `${totalExp.toLocaleString()} PKR`;
-    document.getElementById("totalInvestments").innerText = `${totalInv.toLocaleString()} PKR`;
-    document.getElementById("netProfit").innerText = `${netProf.toLocaleString()} PKR`;
+    document.getElementById("totalRevenue").innerText = totalRev.toLocaleString() + " PKR";
+    document.getElementById("totalExpenses").innerText = totalExp.toLocaleString() + " PKR";
+    document.getElementById("totalInvestments").innerText = totalInv.toLocaleString() + " PKR";
+    document.getElementById("netProfit").innerText = netProf.toLocaleString() + " PKR";
 }
 
 async function handleBookingSubmit(e) {
