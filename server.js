@@ -120,7 +120,7 @@ app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_b
 
     const query = `INSERT INTO bookings (guest_name, reference_name, reference_contact, roomNumber, check_in_date, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
-    db.run(query, [guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount || 0, cnic_front, cnic_back, created_at], function(err) {
+    db.run(query, [guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, Number(payment_amount) || 0, cnic_front, cnic_back, created_at], function(err) {
         if (err) return res.json({ success: false, error: err.message });
         res.json({ success: true, id: this.lastID });
     });

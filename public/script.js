@@ -148,12 +148,11 @@ async function fetchDashboardData() {
         console.error("Error fetching dashboard data:", error);
     }
 }
-
 function renderBookingsTable(bookings) {
     const bookingTbody = document.querySelector("#bookingsTable tbody");
     if (!bookingTbody) return;
 
-    if (bookings.length === 0) {
+    if (!bookings || bookings.length === 0) {
         bookingTbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
         return;
     }
@@ -165,10 +164,11 @@ function renderBookingsTable(bookings) {
         const checkIn = b.check_in_date || b.checkInDate || '';
         const checkOut = b.checkOutDate || '';
         const type = b.bookingType || 'Full Day';
-        const amount = b.payment_amount !== undefined ? b.payment_amount : (b.amount || 0);
+        const amount = b.payment_amount !== undefined && b.payment_amount !== null ? b.payment_amount : (b.amount || 0);
         const ref = b.reference_name || b.bookingReference || 'N/A';
         const frontImg = b.cnic_front || b.idCardFront;
         const backImg = b.cnic_back || b.idCardBack;
+        
         const frontLink = frontImg ? '<a href="' + (frontImg.startsWith('http') || frontImg.startsWith('data') ? frontImg : '/secure_uploads/' + frontImg) + '" target="_blank">View Front</a>' : 'N/A';
         const backLink = backImg ? '<a href="' + (backImg.startsWith('http') || backImg.startsWith('data') ? backImg : '/secure_uploads/' + backImg) + '" target="_blank">View Back</a>' : 'N/A';
 
@@ -179,7 +179,7 @@ function renderBookingsTable(bookings) {
             '<td>' + checkIn.replace('T', ' ') + '</td>' +
             '<td>' + checkOut.replace('T', ' ') + '</td>' +
             '<td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; background: ' + (type === 'Short Booking' ? '#fef3c7; color: #d97706;' : '#e0e7ff; color: #4338ca;') + '">' + type + '</span></td>' +
-            '<td>' + amount + ' PKR</td>' +
+            '<td>' + Number(amount).toLocaleString() + ' PKR</td>' +
             '<td>' + ref + '</td>' +
             '<td>' + frontLink + '</td>' +
             '<td>' + backLink + '</td>' +
@@ -189,6 +189,7 @@ function renderBookingsTable(bookings) {
             '</td>' +
             '</tr>';
     }).join('');
+
 }
 
 function populateFinanceTables(data) {
