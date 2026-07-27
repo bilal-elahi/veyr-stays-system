@@ -18,9 +18,18 @@ if (!fs.existsSync('./secure_uploads')) {
     fs.mkdirSync('./secure_uploads');
 }
 
-// Use Render's persistent directory if available, otherwise local path
-const dbPath = process.env.RENDER 
-    ? path.join('/opt/render/project/src', 'veyr_stays.db') 
+// Database persistent path handling for Render and local environments
+const dataDir = process.env.RENDER ? '/opt/render/project/data' : __dirname;
+if (process.env.RENDER && !fs.existsSync(dataDir)) {
+    try {
+        fs.mkdirSync(dataDir, { recursive: true });
+    } catch (e) {
+        console.log("Could not create data dir, falling back to local");
+    }
+}
+
+const dbPath = process.env.RENDER && fs.existsSync('/opt/render/project/data')
+    ? path.join('/opt/render/project/data', 'veyr_stays.db') 
     : path.join(__dirname, 'veyr_stays.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -28,7 +37,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     else console.log('Connected to SQLite database at:', dbPath);
 });
 
-// Create tables for Bookings, Expenses, Investments, and Monthly Config with updated columns
+// Create tables for Bookings, Expenses, Investments, and Monthly Config
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,9 +141,7 @@ app.delete('/api/bookings/:id', (req, res) => {
     const query = `DELETE FROM bookings WHERE id = ?`;
     
     db.run(query, [bookingId], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Booking deleted successfully', changes: this.changes });
     });
 });
@@ -147,9 +154,7 @@ app.put('/api/bookings/:id', (req, res) => {
     const query = `UPDATE bookings SET guest_name = ?, reference_contact = ?, roomNumber = ?, check_in_date = ?, checkOutDate = ?, bookingType = ?, payment_amount = ?, reference_name = ? WHERE id = ?`;
     
     db.run(query, [guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name, bookingId], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Booking updated successfully', changes: this.changes });
     });
 });
