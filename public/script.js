@@ -7,8 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setupModal("openBookingModal", "bookingModal", "close-modal");
     setupModal("openMonthlyExpenseModal", "monthlyExpenseModal", "close-modal");
     setupModal("openFinanceModal", "financeModal", "close-modal");
+    setupModal(null, "editBookingModal", "close-modal"); // Setup edit modal closing events
 
     document.getElementById("bookingForm").addEventListener("submit", handleBookingSubmit);
+    document.getElementById("editBookingForm").addEventListener("submit", handleEditBookingSubmit);
     document.getElementById("monthlyBillsForm").addEventListener("submit", handleMonthlyBillsSubmit);
     document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
 
@@ -23,16 +25,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupModal(openBtnId, modalId, closeClass) {
-    const openBtn = document.getElementById(openBtnId);
+    const openBtn = openBtnId ? document.getElementById(openBtnId) : null;
     const modal = document.getElementById(modalId);
-    if (!openBtn || !modal) return;
+    if (!modal) return;
 
-    openBtn.addEventListener("click", () => {
-        modal.style.display = "flex";
-        if (modalId === 'monthlyExpenseModal') {
-            loadExistingMonthlyConfig();
-        }
-    });
+    if (openBtn) {
+        openBtn.addEventListener("click", () => {
+            modal.style.display = "flex";
+            if (modalId === 'monthlyExpenseModal') {
+                loadExistingMonthlyConfig();
+            }
+        });
+    }
     
     modal.querySelectorAll(`.${closeClass}`).forEach(el => {
         el.addEventListener("click", () => modal.style.display = "none");
@@ -179,7 +183,10 @@ function renderBookingsTable(bookings) {
             '<td>' + ref + '</td>' +
             '<td>' + frontLink + '</td>' +
             '<td>' + backLink + '</td>' +
-            '<td><button onclick="deleteBooking(\'' + b.id + '\')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Delete</button></td>' +
+            '<td style="display: flex; gap: 0.4rem;">' +
+                '<button onclick="openEditBookingModal(\'' + b.id + '\')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #2563eb; color: white;">Edit</button>' +
+                '<button onclick="deleteBooking(\'' + b.id + '\')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #dc2626; color: white;">Delete</button>' +
+            '</td>' +
             '</tr>';
     }).join('');
 }
@@ -253,6 +260,66 @@ async function handleBookingSubmit(e) {
     document.getElementById("bookingModal").style.display = "none";
     e.target.reset();
     fetchDashboardData();
+}
+
+function openEditBookingModal(id) {
+    const booking = allBookingsCache.find(b => String(b.id) === String(id));
+    if (!booking) return;
+
+    document.getElementById("editBookingId").value = booking.id;
+    document.getElementById("editGuestName").value = booking.guest_name || booking.guestName || '';
+    document.getElementById("editGuestContact").value = booking.reference_contact || booking.guestContact || '';
+    document.getElementById("editRoomNumber").value = booking.roomNumber || '';
+    document.getElementById("editCheckInDate").value = booking.check_in_date || booking.checkInDate || '';
+    document.getElementById("editCheckOutDate").value = booking.checkOutDate || '';
+    document.getElementById("editBookingType").value = booking.bookingType || 'Full Day';
+    document.getElementById("editBookingAmount").value = booking.payment_amount !== undefined ? booking.payment_amount : (booking.amount || 0);
+    document.getElementById("editBookingReference").value = booking.reference_name || booking.bookingReference || '';
+
+    document.getElementById("editBookingModal").style.display = "flex";
+}
+
+async function handleEditBookingSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("editBookingId").value;
+
+    const payload = {
+        guest_name: document.getElementById("editGuestName").value,
+        reference_contact: document.getElementById("editGuestContact").value,
+        roomNumber: document.getElementById("editRoomNumber").value,
+        check_in: document.getElementById("editCheckInDate").value,
+        checkOutDate: document.getElementById("editCheckOutDate").value,
+        bookingType: document.getElementById("editBookingType").value,
+        payment_amount: Number(document.getElementById("editBookingAmount").value),
+        reference_name: document.getElementById("editBookingReference").value
+    };
+
+    const response = await fetch(`/api/bookings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+        document.getElementById("editBookingModal").style.display = "none";
+        fetchDashboardData();
+    } else {
+        alert("Failed to update booking.");
+    }
+}
+
+async function deleteBooking(id) {
+    if (!confirm("Are you sure you want to delete this booking?")) return;
+
+    const response = await fetch(`/api/bookings/${id}`, {
+        method: 'DELETE'
+    });
+
+    if (response.ok) {
+        fetchDashboardData();
+    } else {
+        alert("Failed to delete booking.");
+    }
 }
 
 async function handleFinanceSubmit(e) {

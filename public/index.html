@@ -134,6 +134,53 @@
         </div>
     </div>
 
+    <!-- Edit Booking Modal -->
+    <div id="editBookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="editBookingModal">&times;</span>
+            <h2>Edit Booking</h2>
+            <form id="editBookingForm">
+                <input type="hidden" id="editBookingId">
+                <div class="form-group">
+                    <label for="editGuestName">Guest Name</label>
+                    <input type="text" id="editGuestName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editGuestContact">Contact Number</label>
+                    <input type="text" id="editGuestContact" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRoomNumber">Room Number</label>
+                    <input type="text" id="editRoomNumber" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCheckInDate">Check-In Date & Time</label>
+                    <input type="datetime-local" id="editCheckInDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCheckOutDate">Check-Out Date & Time</label>
+                    <input type="datetime-local" id="editCheckOutDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingType">Booking Type</label>
+                    <select id="editBookingType">
+                        <option value="Full Day">Full Day</option>
+                        <option value="Short Booking">Short Booking</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingAmount">Payment Amount (PKR)</label>
+                    <input type="number" id="editBookingAmount" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingReference">Reference / Source</label>
+                    <input type="text" id="editBookingReference">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Update Booking</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Monthly Automated Bills Configuration Modal -->
     <div id="monthlyExpenseModal" class="modal">
         <div class="modal-content">

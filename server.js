@@ -28,17 +28,18 @@ const db = new sqlite3.Database(dbPath, (err) => {
     else console.log('Connected to SQLite database at:', dbPath);
 });
 
-// Create tables for Bookings, Expenses, Investments, and Monthly Config
+// Create tables for Bookings, Expenses, Investments, and Monthly Config with updated columns
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         guest_name TEXT,
         reference_name TEXT,
         reference_contact TEXT,
-        payment_amount REAL,
-        expense_amount REAL,
-        investment_amount REAL,
+        roomNumber TEXT,
         check_in_date TEXT,
+        checkOutDate TEXT,
+        bookingType TEXT,
+        payment_amount REAL,
         cnic_front TEXT,
         cnic_back TEXT,
         created_at TEXT
@@ -99,7 +100,6 @@ app.get('/api/data', (req, res) => {
 app.post('/api/config/monthly', (req, res) => {
     const { rent, electric, internet } = req.body;
     
-    // Replace or insert latest config row
     db.run(`DELETE FROM monthly_config`, [], (err) => {
         if (err) return res.json({ success: false, error: err.message });
 
@@ -113,16 +113,44 @@ app.post('/api/config/monthly', (req, res) => {
 
 // API: Add Booking
 app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_back' }]), (req, res) => {
-    const { guest_name, reference_name, reference_contact, payment_amount, expense_amount, investment_amount, check_in } = req.body;
+    const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount } = req.body;
     const cnic_front = req.files && req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
     const cnic_back = req.files && req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
     const created_at = new Date().toISOString().split('T')[0];
 
-    const query = `INSERT INTO bookings (guest_name, reference_name, reference_contact, payment_amount, expense_amount, investment_amount, check_in_date, cnic_front, cnic_back, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO bookings (guest_name, reference_name, reference_contact, roomNumber, check_in_date, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
-    db.run(query, [guest_name, reference_name, reference_contact, payment_amount || 0, expense_amount || 0, investment_amount || 0, check_in, cnic_front, cnic_back, created_at], function(err) {
+    db.run(query, [guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount || 0, cnic_front, cnic_back, created_at], function(err) {
         if (err) return res.json({ success: false, error: err.message });
         res.json({ success: true, id: this.lastID });
+    });
+});
+
+// API: DELETE Booking by ID
+app.delete('/api/bookings/:id', (req, res) => {
+    const bookingId = req.params.id;
+    const query = `DELETE FROM bookings WHERE id = ?`;
+    
+    db.run(query, [bookingId], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Booking deleted successfully', changes: this.changes });
+    });
+});
+
+// API: UPDATE / EDIT Booking by ID
+app.put('/api/bookings/:id', (req, res) => {
+    const bookingId = req.params.id;
+    const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name } = req.body;
+    
+    const query = `UPDATE bookings SET guest_name = ?, reference_contact = ?, roomNumber = ?, check_in_date = ?, checkOutDate = ?, bookingType = ?, payment_amount = ?, reference_name = ? WHERE id = ?`;
+    
+    db.run(query, [guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name, bookingId], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Booking updated successfully', changes: this.changes });
     });
 });
 
