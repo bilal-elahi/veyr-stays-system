@@ -12,7 +12,7 @@
             <h1>Veyr Stays Dashboard</h1>
             <div class="header-actions">
                 <button id="openBookingModal" class="btn-primary">+ Add Booking</button>
-                <button id="openMonthlyExpenseModal" class="btn-secondary" style="background-color: #0f172a; color: white;">⚙️ Set Monthly Bills (Rent/Elec/Net)</button>
+                <button id="openMonthlyExpenseModal" class="btn-secondary btn-dark">Set Monthly Bills (Rent/Elec/Net)</button>
                 <button id="openFinanceModal" class="btn-secondary">+ Add Other Expense / Investment</button>
             </div>
         </header>
@@ -31,7 +31,7 @@
                 <h3>Total Investments</h3>
                 <p id="totalInvestments">0 PKR</p>
             </div>
-            <div class="metric-card" style="border-left: 4px solid #2563eb;">
+            <div class="metric-card accent-primary">
                 <h3>Net Profit</h3>
                 <p id="netProfit">0 PKR</p>
             </div>
@@ -39,10 +39,10 @@
 
         <!-- Bookings Section with Search & Responsive Scroll Wrapper -->
         <section class="card-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-                <h2 style="margin: 0;">Bookings Management</h2>
-                <div style="width: 300px; max-width: 100%;">
-                    <input type="text" id="searchBookingInput" placeholder="Search booking by guest name..." style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px;">
+            <div class="section-header">
+                <h2>Bookings Management</h2>
+                <div class="search-wrap">
+                    <input type="text" id="searchBookingInput" class="search-input" placeholder="Search booking by guest name...">
                 </div>
             </div>
             <div class="table-wrap">
@@ -72,7 +72,35 @@
         <!-- Financial Tracking Section -->
         <section class="financial-split-grid">
             <div class="card-section">
-                <h2>Expenses Log (Includes Auto-Monthly Bills)</h2>
+                <div class="section-header">
+                    <h2>Expenses Log (Includes Auto-Monthly Bills)</h2>
+                    <div class="filter-group">
+                        <label class="filter-label" for="expenseMonthFilter">Month</label>
+                        <input type="month" id="expenseMonthFilter" class="filter-input">
+                    </div>
+                </div>
+                <div class="expense-summary" id="expenseSummary">
+                    <div class="expense-summary-item">
+                        <span class="expense-summary-label">Total</span>
+                        <span class="expense-summary-value" id="monthTotalExpense">0 PKR</span>
+                    </div>
+                    <div class="expense-summary-item">
+                        <span class="expense-summary-label">Rent</span>
+                        <span class="expense-summary-value" id="monthRentExpense">0 PKR</span>
+                    </div>
+                    <div class="expense-summary-item">
+                        <span class="expense-summary-label">Electric</span>
+                        <span class="expense-summary-value" id="monthElectricExpense">0 PKR</span>
+                    </div>
+                    <div class="expense-summary-item">
+                        <span class="expense-summary-label">Internet</span>
+                        <span class="expense-summary-value" id="monthInternetExpense">0 PKR</span>
+                    </div>
+                    <div class="expense-summary-item">
+                        <span class="expense-summary-label">Other</span>
+                        <span class="expense-summary-value" id="monthOtherExpense">0 PKR</span>
+                    </div>
+                </div>
                 <div class="table-wrap">
                     <table class="data-table" id="expensesTable">
                         <thead>
@@ -178,7 +206,7 @@
                     <label for="editBookingReference">Reference / Source</label>
                     <input type="text" id="editBookingReference">
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">Update Booking</button>
+                <button type="submit" class="btn-primary btn-full">Update Booking</button>
             </form>
         </div>
     </div>
@@ -188,7 +216,7 @@
         <div class="modal-content">
             <span class="close-modal" data-target="monthlyExpenseModal">&times;</span>
             <h2>Configure Monthly Fixed Bills</h2>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">These expenses will automatically apply to your totals on the 1st of every month.</p>
+            <p class="modal-desc">These expenses will automatically apply to your totals on the 1st of every month.</p>
             <form id="monthlyBillsForm">
                 <div class="form-group"><label>Monthly Rent (PKR)</label><input type="number" id="monthlyRent" placeholder="0" required></div>
                 <div class="form-group"><label>Monthly Electric Bill (PKR)</label><input type="number" id="monthlyElectric" placeholder="0" required></div>

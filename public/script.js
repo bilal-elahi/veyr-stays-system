@@ -1,4 +1,5 @@
 let allBookingsCache = [];
+let allExpensesCache = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     checkAndApplyMonthlyBills();
@@ -21,6 +22,13 @@ document.addEventListener("DOMContentLoaded", () => {
             (b.guestName && b.guestName.toLowerCase().includes(searchTerm))
         );
         renderBookingsTable(filtered);
+    });
+
+    const monthInput = document.getElementById("expenseMonthFilter");
+    const now = new Date();
+    monthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    monthInput.addEventListener("change", () => {
+        renderFilteredExpenses();
     });
 });
 
@@ -153,7 +161,7 @@ function renderBookingsTable(bookings) {
     if (!bookingTbody) return;
 
     if (!bookings || bookings.length === 0) {
-        bookingTbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        bookingTbody.innerHTML = '<tr><td colspan="11" class="empty-state">No bookings found</td></tr>';
         return;
     }
 
@@ -178,24 +186,51 @@ function renderBookingsTable(bookings) {
             '<td>' + room + '</td>' +
             '<td>' + checkIn.replace('T', ' ') + '</td>' +
             '<td>' + checkOut.replace('T', ' ') + '</td>' +
-            '<td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; background: ' + (type === 'Short Booking' ? '#fef3c7; color: #d97706;' : '#e0e7ff; color: #4338ca;') + '">' + type + '</span></td>' +
+            '<td><span class="badge ' + (type === 'Short Booking' ? 'badge-short-booking' : type === 'Night' ? 'badge-night' : 'badge-full-day') + '">' + type + '</span></td>' +
             '<td>' + Number(amount).toLocaleString() + ' PKR</td>' +
             '<td>' + ref + '</td>' +
             '<td>' + frontLink + '</td>' +
             '<td>' + backLink + '</td>' +
-            '<td style="display: flex; gap: 0.4rem;">' +
-                '<button onclick="openEditBookingModal(\'' + b.id + '\')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #2563eb; color: white;">Edit</button>' +
-                '<button onclick="deleteBooking(\'' + b.id + '\')" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #dc2626; color: white;">Delete</button>' +
+            '<td class="actions-cell">' +
+                '<button onclick="openEditBookingModal(\'' + b.id + '\')" class="btn-primary btn-sm">Edit</button>' +
+                '<button onclick="deleteBooking(\'' + b.id + '\')" class="btn-danger btn-sm">Delete</button>' +
             '</td>' +
             '</tr>';
     }).join('');
 
 }
 
-function populateFinanceTables(data) {
+function categorizeExpense(title) {
+    const t = (title || '').toLowerCase();
+    if (t.includes('rent')) return 'rent';
+    if (t.includes('electric')) return 'electric';
+    if (t.includes('internet')) return 'internet';
+    return 'other';
+}
+
+function renderFilteredExpenses() {
+    const monthInput = document.getElementById("expenseMonthFilter");
+    const selectedMonth = monthInput.value;
+    if (!selectedMonth || !allExpensesCache.length) {
+        document.querySelector("#expensesTable tbody").innerHTML = '<tr><td colspan="4" class="empty-state">No expenses found</td></tr>';
+        document.getElementById("monthTotalExpense").innerText = '0 PKR';
+        document.getElementById("monthRentExpense").innerText = '0 PKR';
+        document.getElementById("monthElectricExpense").innerText = '0 PKR';
+        document.getElementById("monthInternetExpense").innerText = '0 PKR';
+        document.getElementById("monthOtherExpense").innerText = '0 PKR';
+        return;
+    }
+
+    const filtered = allExpensesCache.filter(e => {
+        const dateStr = e.expense_date || e.date || e.created_at || '';
+        return dateStr.startsWith(selectedMonth);
+    });
+
     const expenseTbody = document.querySelector("#expensesTable tbody");
-    if (expenseTbody && data.expenses) {
-        expenseTbody.innerHTML = data.expenses.map(e => 
+    if (!filtered.length) {
+        expenseTbody.innerHTML = '<tr><td colspan="4" class="empty-state">No expenses for this month</td></tr>';
+    } else {
+        expenseTbody.innerHTML = filtered.map(e =>
             '<tr>' +
             '<td>' + (e.expense_title || e.category || '-') + '</td>' +
             '<td>' + (e.description || '-') + '</td>' +
@@ -204,6 +239,28 @@ function populateFinanceTables(data) {
             '</tr>'
         ).join('');
     }
+
+    let total = 0, rent = 0, electric = 0, internet = 0, other = 0;
+    filtered.forEach(e => {
+        const amt = Number(e.amount || 0);
+        total += amt;
+        const cat = categorizeExpense(e.expense_title);
+        if (cat === 'rent') rent += amt;
+        else if (cat === 'electric') electric += amt;
+        else if (cat === 'internet') internet += amt;
+        else other += amt;
+    });
+
+    document.getElementById("monthTotalExpense").innerText = total.toLocaleString() + ' PKR';
+    document.getElementById("monthRentExpense").innerText = rent.toLocaleString() + ' PKR';
+    document.getElementById("monthElectricExpense").innerText = electric.toLocaleString() + ' PKR';
+    document.getElementById("monthInternetExpense").innerText = internet.toLocaleString() + ' PKR';
+    document.getElementById("monthOtherExpense").innerText = other.toLocaleString() + ' PKR';
+}
+
+function populateFinanceTables(data) {
+    allExpensesCache = data.expenses || [];
+    renderFilteredExpenses();
 
     const investmentTbody = document.querySelector("#investmentsTable tbody");
     if (investmentTbody && data.investments) {
