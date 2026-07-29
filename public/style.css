@@ -21,7 +21,7 @@
     --gray-700: #334155;
     --gray-800: #1e293b;
     --gray-900: #0f172a;
-    --header-bg: #0f172a;
+    --header-bg: #ffffff;
     --radius: 12px;
     --radius-sm: 8px;
     --radius-xs: 6px;
@@ -66,31 +66,22 @@ body {
     gap: 12px;
     background: var(--header-bg);
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--gray-200);
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: var(--shadow-sm);
 }
 
 .app-header h1 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--gray-900);
     letter-spacing: -0.01em;
     display: flex;
     align-items: center;
     gap: 10px;
-}
-
-.app-header h1::before {
-    content: '';
-    width: 8px;
-    height: 8px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
 }
 
 .header-actions {
