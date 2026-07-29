@@ -265,14 +265,13 @@ body {
 
 .data-table {
     width: 100%;
-    min-width: 520px;
     border-collapse: collapse;
     text-align: left;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
 }
 
 .data-table th {
-    padding: 10px 14px;
+    padding: 8px 8px;
     background: var(--gray-50);
     font-weight: 600;
     color: var(--gray-500);
@@ -284,11 +283,11 @@ body {
 }
 
 .data-table td {
-    padding: 11px 14px;
+    padding: 8px 8px;
     border-bottom: 1px solid var(--gray-100);
     white-space: nowrap;
     color: var(--gray-700);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
 }
 
 .data-table tbody tr:last-child td {
@@ -303,7 +302,7 @@ body {
     color: var(--primary);
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.6875rem;
     transition: var(--transition);
 }
 
@@ -313,11 +312,10 @@ body {
 
 .badge {
     display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.6875rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.625rem;
     font-weight: 600;
-    letter-spacing: 0.01em;
 }
 
 .badge-full-day {
@@ -621,9 +619,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 10px 14px;
+    padding: 8px 10px;
     flex: 1;
-    min-width: 70px;
+    min-width: 0;
     border-right: 1px solid var(--gray-200);
 }
 
@@ -677,6 +675,14 @@ body {
     .header-actions button {
         flex: none;
         padding: 8px 16px;
+    }
+
+    .expense-summary-item {
+        padding: 10px 14px;
+    }
+
+    .expense-summary-value {
+        font-size: 0.85rem;
     }
 }
 
@@ -739,7 +745,20 @@ body {
     }
 
     .data-table {
-        min-width: 650px;
+        font-size: 0.8125rem;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 10px 14px;
+        font-size: 0.8125rem;
+    }
+    .data-table a {
+        font-size: 0.8125rem;
+    }
+    .badge {
+        padding: 3px 10px;
+        font-size: 0.6875rem;
+        border-radius: 20px;
     }
 
     .expense-summary-item {
