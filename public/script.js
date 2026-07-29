@@ -110,11 +110,17 @@ async function handleBillSubmit(e) {
         bill_month: billMonth
     };
 
-    await fetch('/api/expenses', {
+    const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     });
+    const result = await res.json();
+
+    if (!result.success) {
+        alert(result.error || 'Failed to save bill');
+        return;
+    }
 
     document.getElementById("billModal").style.display = "none";
     e.target.reset();
@@ -290,10 +296,16 @@ async function handleBookingSubmit(e) {
         formData.append("cnic_back", backInput.files[0]);
     }
 
-    await fetch('/api/bookings', {
+    const res = await fetch('/api/bookings', {
         method: 'POST',
         body: formData
     });
+    const result = await res.json();
+
+    if (!result.success) {
+        alert(result.error || 'Failed to save booking');
+        return;
+    }
 
     document.getElementById("bookingModal").style.display = "none";
     e.target.reset();
@@ -371,11 +383,13 @@ async function handleFinanceSubmit(e) {
             expense_date: document.getElementById("financeDate").value
         };
 
-        await fetch('/api/expenses', {
+        const res = await fetch('/api/expenses', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        const result = await res.json();
+        if (!result.success) { alert(result.error || 'Failed to save expense'); return; }
     } else {
         const payload = {
             investor_name: document.getElementById("financeCategory").value,
@@ -383,11 +397,13 @@ async function handleFinanceSubmit(e) {
             investment_date: document.getElementById("financeDate").value
         };
 
-        await fetch('/api/investments', {
+        const res = await fetch('/api/investments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        const result = await res.json();
+        if (!result.success) { alert(result.error || 'Failed to save investment'); return; }
     }
 
     document.getElementById("financeModal").style.display = "none";
