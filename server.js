@@ -1,5 +1,5 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
@@ -18,65 +18,50 @@ if (!fs.existsSync('./secure_uploads')) {
     fs.mkdirSync('./secure_uploads');
 }
 
-// Database persistent path handling for Render and local environments
-const dataDir = process.env.RENDER ? '/opt/render/project/data' : __dirname;
-if (process.env.RENDER && !fs.existsSync(dataDir)) {
-    try {
-        fs.mkdirSync(dataDir, { recursive: true });
-    } catch (e) {
-        console.log("Could not create data dir, falling back to local");
-    }
-}
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/veyr_stays';
 
-const dbPath = process.env.RENDER && fs.existsSync('/opt/render/project/data')
-    ? path.join('/opt/render/project/data', 'veyr_stays.db') 
-    : path.join(__dirname, 'veyr_stays.db');
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Connected to MongoDB at:', MONGO_URI))
+    .catch(err => console.error('MongoDB connection error:', err.message));
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('Database opening error: ' + err.message);
-    else console.log('Connected to SQLite database at:', dbPath);
-});
+const bookingSchema = new mongoose.Schema({
+    guest_name: String,
+    reference_name: String,
+    reference_contact: String,
+    roomNumber: String,
+    check_in_date: String,
+    checkOutDate: String,
+    bookingType: String,
+    payment_amount: Number,
+    cnic_front: String,
+    cnic_back: String,
+    created_at: String
+}, { versionKey: false });
 
-// Create tables for Bookings, Expenses, Investments, and Monthly Config
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS bookings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        guest_name TEXT,
-        reference_name TEXT,
-        reference_contact TEXT,
-        roomNumber TEXT,
-        check_in_date TEXT,
-        checkOutDate TEXT,
-        bookingType TEXT,
-        payment_amount REAL,
-        cnic_front TEXT,
-        cnic_back TEXT,
-        created_at TEXT
-    )`);
+const expenseSchema = new mongoose.Schema({
+    expense_title: String,
+    amount: Number,
+    expense_date: String,
+    created_at: String
+}, { versionKey: false });
 
-    db.run(`CREATE TABLE IF NOT EXISTS expenses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        expense_title TEXT,
-        amount REAL,
-        expense_date TEXT,
-        created_at TEXT
-    )`);
+const investmentSchema = new mongoose.Schema({
+    investor_name: String,
+    amount: Number,
+    investment_date: String,
+    created_at: String
+}, { versionKey: false });
 
-    db.run(`CREATE TABLE IF NOT EXISTS investments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        investor_name TEXT,
-        amount REAL,
-        investment_date TEXT,
-        created_at TEXT
-    )`);
+const monthlyConfigSchema = new mongoose.Schema({
+    rent: Number,
+    electric: Number,
+    internet: Number
+}, { versionKey: false });
 
-    db.run(`CREATE TABLE IF NOT EXISTS monthly_config (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        rent REAL,
-        electric REAL,
-        internet REAL
-    )`);
-});
+const Booking = mongoose.model('Booking', bookingSchema);
+const Expense = mongoose.model('Expense', expenseSchema);
+const Investment = mongoose.model('Investment', investmentSchema);
+const MonthlyConfig = mongoose.model('MonthlyConfig', monthlyConfigSchema);
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, './secure_uploads/'),
@@ -84,103 +69,108 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// API: Get All Financial Data, Bookings, and Monthly Config
-app.get('/api/data', (req, res) => {
-    db.all("SELECT * FROM bookings ORDER BY id DESC", [], (err, bookings) => {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        db.all("SELECT * FROM expenses ORDER BY id DESC", [], (err, expenses) => {
-            if (err) return res.status(500).json({ error: err.message });
+app.get('/api/data', async (req, res) => {
+    try {
+        const [bookings, expenses, investments, monthlyConfig] = await Promise.all([
+            Booking.find().sort({ _id: -1 }).lean(),
+            Expense.find().sort({ _id: -1 }).lean(),
+            Investment.find().sort({ _id: -1 }).lean(),
+            MonthlyConfig.findOne().sort({ _id: -1 }).lean()
+        ]);
 
-            db.all("SELECT * FROM investments ORDER BY id DESC", [], (err, investments) => {
-                if (err) return res.status(500).json({ error: err.message });
+        const mappedBookings = bookings.map(b => ({ ...b, id: b._id }));
+        const mappedExpenses = expenses.map(e => ({ ...e, id: e._id }));
+        const mappedInvestments = investments.map(i => ({ ...i, id: i._id }));
 
-                db.get("SELECT * FROM monthly_config ORDER BY id DESC LIMIT 1", [], (err, monthlyConfig) => {
-                    if (err) return res.status(500).json({ error: err.message });
-
-                    res.json({ bookings, expenses, investments, monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 } });
-                });
-            });
+        res.json({
+            bookings: mappedBookings,
+            expenses: mappedExpenses,
+            investments: mappedInvestments,
+            monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 }
         });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// API: Save / Update Monthly Bills Configuration
-app.post('/api/config/monthly', (req, res) => {
-    const { rent, electric, internet } = req.body;
-    
-    db.run(`DELETE FROM monthly_config`, [], (err) => {
-        if (err) return res.json({ success: false, error: err.message });
+app.post('/api/config/monthly', async (req, res) => {
+    try {
+        const { rent, electric, internet } = req.body;
+        const config = await MonthlyConfig.findOneAndUpdate(
+            {},
+            { rent: rent || 0, electric: electric || 0, internet: internet || 0 },
+            { upsert: true, new: true, lean: true }
+        );
+        res.json({ success: true, monthlyConfig: { rent: config.rent, electric: config.electric, internet: config.internet } });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
 
-        db.run(`INSERT INTO monthly_config (rent, electric, internet) VALUES (?, ?, ?)`, 
-        [rent || 0, electric || 0, internet || 0], function(err) {
-            if (err) return res.json({ success: false, error: err.message });
-            res.json({ success: true, monthlyConfig: { rent, electric, internet } });
+app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_back' }]), async (req, res) => {
+    try {
+        const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount } = req.body;
+        const cnic_front = req.files && req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
+        const cnic_back = req.files && req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
+        const created_at = new Date().toISOString().split('T')[0];
+
+        const booking = await Booking.create({
+            guest_name, reference_name, reference_contact, roomNumber,
+            check_in_date: check_in, checkOutDate, bookingType,
+            payment_amount: Number(payment_amount) || 0,
+            cnic_front, cnic_back, created_at
         });
-    });
+
+        res.json({ success: true, id: booking._id });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
 });
 
-// API: Add Booking
-app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_back' }]), (req, res) => {
-    const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount } = req.body;
-    const cnic_front = req.files && req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
-    const cnic_back = req.files && req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
-    const created_at = new Date().toISOString().split('T')[0];
-
-    const query = `INSERT INTO bookings (guest_name, reference_name, reference_contact, roomNumber, check_in_date, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    
-    db.run(query, [guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, Number(payment_amount) || 0, cnic_front, cnic_back, created_at], function(err) {
-        if (err) return res.json({ success: false, error: err.message });
-        res.json({ success: true, id: this.lastID });
-    });
+app.delete('/api/bookings/:id', async (req, res) => {
+    try {
+        const result = await Booking.deleteOne({ _id: req.params.id });
+        res.json({ message: 'Booking deleted successfully', changes: result.deletedCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// API: DELETE Booking by ID
-app.delete('/api/bookings/:id', (req, res) => {
-    const bookingId = req.params.id;
-    const query = `DELETE FROM bookings WHERE id = ?`;
-    
-    db.run(query, [bookingId], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Booking deleted successfully', changes: this.changes });
-    });
+app.put('/api/bookings/:id', async (req, res) => {
+    try {
+        const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name } = req.body;
+        const result = await Booking.updateOne(
+            { _id: req.params.id },
+            { guest_name, reference_contact, roomNumber, check_in_date: check_in, checkOutDate, bookingType, payment_amount, reference_name }
+        );
+        res.json({ message: 'Booking updated successfully', changes: result.modifiedCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// API: UPDATE / EDIT Booking by ID
-app.put('/api/bookings/:id', (req, res) => {
-    const bookingId = req.params.id;
-    const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name } = req.body;
-    
-    const query = `UPDATE bookings SET guest_name = ?, reference_contact = ?, roomNumber = ?, check_in_date = ?, checkOutDate = ?, bookingType = ?, payment_amount = ?, reference_name = ? WHERE id = ?`;
-    
-    db.run(query, [guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name, bookingId], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Booking updated successfully', changes: this.changes });
-    });
+app.post('/api/expenses', async (req, res) => {
+    try {
+        const { expense_title, amount, expense_date } = req.body;
+        const created_at = new Date().toISOString().split('T')[0];
+
+        const expense = await Expense.create({ expense_title, amount, expense_date, created_at });
+        res.json({ success: true, id: expense._id });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
 });
 
-// API: Add Expense (Rent, Bills, etc.)
-app.post('/api/expenses', (req, res) => {
-    const { expense_title, amount, expense_date } = req.body;
-    const created_at = new Date().toISOString().split('T')[0];
+app.post('/api/investments', async (req, res) => {
+    try {
+        const { investor_name, amount, investment_date } = req.body;
+        const created_at = new Date().toISOString().split('T')[0];
 
-    db.run(`INSERT INTO expenses (expense_title, amount, expense_date, created_at) VALUES (?, ?, ?, ?)`, 
-    [expense_title, amount, expense_date, created_at], function(err) {
-        if (err) return res.json({ success: false, error: err.message });
-        res.json({ success: true, id: this.lastID });
-    });
-});
-
-// API: Add Investment
-app.post('/api/investments', (req, res) => {
-    const { investor_name, amount, investment_date } = req.body;
-    const created_at = new Date().toISOString().split('T')[0];
-
-    db.run(`INSERT INTO investments (investor_name, amount, investment_date, created_at) VALUES (?, ?, ?, ?)`, 
-    [investor_name, amount, investment_date, created_at], function(err) {
-        if (err) return res.json({ success: false, error: err.message });
-        res.json({ success: true, id: this.lastID });
-    });
+        const investment = await Investment.create({ investor_name, amount, investment_date, created_at });
+        res.json({ success: true, id: investment._id });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
 });
 
 app.listen(PORT, () => {
