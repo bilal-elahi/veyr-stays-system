@@ -82,6 +82,9 @@ const upload = multer({ storage: storage });
 
 app.get('/api/data', async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({ bookings: [], expenses: [], investments: [], monthlyConfig: { rent: 0, electric: 0, internet: 0 } });
+        }
         const [bookings, expenses, investments, monthlyConfig] = await Promise.all([
             Booking.find().sort({ _id: -1 }).lean(),
             Expense.find().sort({ _id: -1 }).lean(),
@@ -100,12 +103,17 @@ app.get('/api/data', async (req, res) => {
             monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 }
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.json({ bookings: [], expenses: [], investments: [], monthlyConfig: { rent: 0, electric: 0, internet: 0 } });
     }
 });
 
+function isDbConnected() {
+    return mongoose.connection.readyState === 1;
+}
+
 app.post('/api/config/monthly', async (req, res) => {
     try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { rent, electric, internet } = req.body;
         const config = await MonthlyConfig.findOneAndUpdate(
             {},
@@ -120,6 +128,7 @@ app.post('/api/config/monthly', async (req, res) => {
 
 app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_back' }]), async (req, res) => {
     try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount } = req.body;
         const cnic_front = req.files && req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
         const cnic_back = req.files && req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
@@ -140,15 +149,17 @@ app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_b
 
 app.delete('/api/bookings/:id', async (req, res) => {
     try {
+        if (!isDbConnected()) return res.json({ error: 'Database not connected' });
         const result = await Booking.deleteOne({ _id: req.params.id });
         res.json({ message: 'Booking deleted successfully', changes: result.deletedCount });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.json({ error: err.message });
     }
 });
 
 app.put('/api/bookings/:id', async (req, res) => {
     try {
+        if (!isDbConnected()) return res.json({ error: 'Database not connected' });
         const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name } = req.body;
         const result = await Booking.updateOne(
             { _id: req.params.id },
@@ -156,12 +167,13 @@ app.put('/api/bookings/:id', async (req, res) => {
         );
         res.json({ message: 'Booking updated successfully', changes: result.modifiedCount });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.json({ error: err.message });
     }
 });
 
 app.post('/api/expenses', async (req, res) => {
     try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { expense_title, amount, expense_date, bill_type, bill_month } = req.body;
         const created_at = new Date().toISOString().split('T')[0];
 
@@ -174,6 +186,7 @@ app.post('/api/expenses', async (req, res) => {
 
 app.post('/api/investments', async (req, res) => {
     try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { investor_name, amount, investment_date } = req.body;
         const created_at = new Date().toISOString().split('T')[0];
 
