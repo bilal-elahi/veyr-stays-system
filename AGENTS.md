@@ -3,7 +3,7 @@
 ## Stack
 - **Backend:** Express.js v5 (`server.js`) — single-file entrypoint
 - **Frontend:** Vanilla HTML/CSS/JS served statically from `public/`
-- **Database:** File-based JSON (`database.json`) — no external database needed, auto-created on first run
+- **Database:** MongoDB via Mongoose — local default `mongodb://localhost:27017/veyr_stays`, override via `MONGO_URI` env var
 - **File uploads:** Multer — CNIC images stored in `secure_uploads/`
 
 ## Commands
