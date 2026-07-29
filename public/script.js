@@ -275,41 +275,45 @@ function calculateMetrics(data) {
 
 async function handleBookingSubmit(e) {
     e.preventDefault();
-    
+
+    const formData = new FormData(e.target);
+
     const frontInput = document.getElementById("idCardFrontFile");
     const backInput = document.getElementById("idCardBackFile");
-    
-    const formData = new FormData();
-    formData.append("guest_name", document.getElementById("guestName").value);
-    formData.append("reference_contact", document.getElementById("guestContact").value);
-    formData.append("roomNumber", document.getElementById("roomNumber").value);
-    formData.append("check_in", document.getElementById("checkInDate").value);
-    formData.append("checkOutDate", document.getElementById("checkOutDate").value);
-    formData.append("bookingType", document.getElementById("bookingType").value);
-    formData.append("payment_amount", Number(document.getElementById("bookingAmount").value));
-    formData.append("reference_name", document.getElementById("bookingReference").value);
+
+    formData.set("guest_name", document.getElementById("guestName").value);
+    formData.set("reference_contact", document.getElementById("guestContact").value);
+    formData.set("roomNumber", document.getElementById("roomNumber").value);
+    formData.set("check_in", document.getElementById("checkInDate").value);
+    formData.set("checkOutDate", document.getElementById("checkOutDate").value);
+    formData.set("bookingType", document.getElementById("bookingType").value);
+    formData.set("payment_amount", Number(document.getElementById("bookingAmount").value));
+    formData.set("reference_name", document.getElementById("bookingReference").value);
 
     if (frontInput.files && frontInput.files[0]) {
-        formData.append("cnic_front", frontInput.files[0]);
+        formData.set("cnic_front", frontInput.files[0]);
     }
     if (backInput.files && backInput.files[0]) {
-        formData.append("cnic_back", backInput.files[0]);
+        formData.set("cnic_back", backInput.files[0]);
     }
 
-    const res = await fetch('/api/bookings', {
-        method: 'POST',
-        body: formData
-    });
-    const result = await res.json();
+    try {
+        const res = await fetch('/api/bookings', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await res.json();
 
-    if (!result.success) {
-        alert(result.error || 'Failed to save booking');
-        return;
+        if (result.success) {
+            document.getElementById("bookingModal").style.display = "none";
+            e.target.reset();
+            fetchDashboardData();
+        } else {
+            alert('Failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
     }
-
-    document.getElementById("bookingModal").style.display = "none";
-    e.target.reset();
-    fetchDashboardData();
 }
 
 function openEditBookingModal(id) {
