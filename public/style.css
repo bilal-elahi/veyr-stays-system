@@ -1,27 +1,27 @@
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
-    --primary-darker: #1e40af;
-    --primary-light: #3b82f6;
-    --primary-bg: #eff6ff;
-    --primary-ring: rgba(37, 99, 235, 0.2);
-    --success: #059669;
-    --success-bg: #ecfdf5;
-    --warning: #d97706;
-    --warning-bg: #fffbeb;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
-    --gray-50: #f8fafc;
-    --gray-100: #f1f5f9;
-    --gray-200: #e2e8f0;
-    --gray-300: #cbd5e1;
-    --gray-400: #94a3b8;
-    --gray-500: #64748b;
-    --gray-600: #475569;
-    --gray-700: #334155;
-    --gray-800: #1e293b;
-    --gray-900: #0f172a;
-    --header-bg: #1d4ed8;
+    --primary: #8b7355;
+    --primary-dark: #6b5344;
+    --primary-darker: #4a3728;
+    --primary-light: #a0896e;
+    --primary-bg: #f5f0eb;
+    --primary-ring: rgba(139, 115, 85, 0.2);
+    --success: #6b8f4e;
+    --success-bg: #f1f6ed;
+    --warning: #c4913a;
+    --warning-bg: #faf3e8;
+    --danger: #a0524a;
+    --danger-bg: #f8edec;
+    --gray-50: #f8f6f4;
+    --gray-100: #efebe7;
+    --gray-200: #ddd6ce;
+    --gray-300: #c4bab0;
+    --gray-400: #a8988a;
+    --gray-500: #8a7a6a;
+    --gray-600: #6b5d50;
+    --gray-700: #4d4238;
+    --gray-800: #332b24;
+    --gray-900: #1a1612;
+    --header-bg: #4a3728;
     --radius: 12px;
     --radius-sm: 8px;
     --radius-xs: 6px;
@@ -42,7 +42,7 @@
 
 body {
     font-family: var(--font);
-    background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 50%, #fef9ef 100%);
+    background: linear-gradient(135deg, #f8f6f4 0%, #f5f0eb 50%, #f0ece7 100%);
     color: var(--gray-900);
     margin: 0;
     padding: 0;
@@ -64,19 +64,19 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
-    background: var(--header-bg);
+    background: linear-gradient(135deg, var(--header-bg), #5c4a3d);
     padding: 16px 20px;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 4px 20px rgba(29, 78, 216, 0.25);
+    box-shadow: 0 4px 20px rgba(74, 55, 40, 0.3);
 }
 
 .app-header h1 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    color: #fff;
+    color: #f5f0eb;
     letter-spacing: -0.01em;
     display: flex;
     align-items: center;
@@ -87,7 +87,7 @@ body {
     content: '';
     width: 8px;
     height: 8px;
-    background: #93c5fd;
+    background: #c4bab0;
     border-radius: 50%;
     display: inline-block;
     flex-shrink: 0;
@@ -101,51 +101,51 @@ body {
 }
 
 .header-actions .btn-primary {
-    background: #fff;
-    color: var(--primary-dark);
+    background: #f5f0eb;
+    color: var(--primary-darker);
     border: none;
 }
 
 .header-actions .btn-primary:hover {
-    background: var(--gray-100);
+    background: #ede5dd;
     box-shadow: none;
 }
 
 .header-actions .btn-primary:active {
-    background: var(--gray-200);
+    background: #ddd6ce;
     transform: scale(0.97);
 }
 
 .header-actions .btn-dark {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(245, 240, 235, 0.15);
+    color: #f5f0eb;
+    border: 1px solid rgba(245, 240, 235, 0.25);
     backdrop-filter: blur(4px);
 }
 
 .header-actions .btn-dark:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(245, 240, 235, 0.25);
     box-shadow: none;
 }
 
 .header-actions .btn-dark:active {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(245, 240, 235, 0.1);
     transform: scale(0.97);
 }
 
 .header-actions .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(245, 240, 235, 0.1);
+    color: #f5f0eb;
+    border: 1px solid rgba(245, 240, 235, 0.2);
 }
 
 .header-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(245, 240, 235, 0.2);
+    border-color: rgba(245, 240, 235, 0.3);
 }
 
 .header-actions .btn-secondary:active {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(245, 240, 235, 0.05);
 }
 
 .main-content {
@@ -193,25 +193,25 @@ body {
 
 .metric-card.accent-primary {
     border-left: 3px solid var(--primary);
-    background: linear-gradient(135deg, #fff, #f8faff);
+    background: linear-gradient(135deg, #fff, #f5f0eb);
 }
 .metric-card.accent-primary p { color: var(--primary-dark); }
 
 .metric-card.accent-success {
     border-left: 3px solid var(--success);
-    background: linear-gradient(135deg, #fff, #f0fdf6);
+    background: linear-gradient(135deg, #fff, #f1f6ed);
 }
 .metric-card.accent-success p { color: var(--success); }
 
 .metric-card.accent-warning {
     border-left: 3px solid var(--warning);
-    background: linear-gradient(135deg, #fff, #fffaf0);
+    background: linear-gradient(135deg, #fff, #faf3e8);
 }
 .metric-card.accent-warning p { color: var(--warning); }
 
 .metric-card.accent-danger {
     border-left: 3px solid var(--danger);
-    background: linear-gradient(135deg, #fff, #fef5f5);
+    background: linear-gradient(135deg, #fff, #f8edec);
 }
 .metric-card.accent-danger p { color: var(--danger); }
 
@@ -223,6 +223,7 @@ body {
     margin-bottom: 14px;
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
+    border-top: 2px solid var(--primary-light);
 }
 
 .card-section h2 {
@@ -230,7 +231,7 @@ body {
     margin-bottom: 14px;
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--gray-800);
+    color: var(--primary-darker);
     letter-spacing: -0.01em;
     display: flex;
     align-items: center;
@@ -373,8 +374,8 @@ body {
 }
 
 .badge-night {
-    background: #f5f3ff;
-    color: #7c3aed;
+    background: #f0ece7;
+    color: var(--primary-dark);
 }
 
 .btn-primary, .btn-secondary, .btn-danger {
@@ -403,7 +404,7 @@ body {
 
 .btn-primary:hover {
     background: var(--primary-dark);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(107, 83, 68, 0.3);
 }
 
 .btn-primary:active {
@@ -438,7 +439,7 @@ body {
 }
 
 .btn-danger:active {
-    background: #fee2e2;
+    background: #f0d6d4;
 }
 
 .btn-sm {
@@ -455,7 +456,7 @@ body {
 
 .btn-dark:hover {
     background: var(--gray-900);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+    box-shadow: 0 4px 12px rgba(26, 22, 18, 0.25);
 }
 
 .btn-dark:active {
@@ -479,7 +480,7 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(15, 23, 42, 0.5);
+    background-color: rgba(74, 55, 40, 0.5);
     align-items: flex-end;
     justify-content: center;
     padding: 0;
@@ -496,8 +497,9 @@ body {
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 -20px 60px rgba(74, 55, 40, 0.15);
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-top: 3px solid var(--primary-light);
 }
 
 @keyframes slideUp {
