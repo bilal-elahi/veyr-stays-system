@@ -42,7 +42,7 @@
 
 body {
     font-family: var(--font);
-    background: linear-gradient(135deg, #dbeafe 0%, #e0e9ff 50%, #eff6ff 100%);
+    background: linear-gradient(135deg, #bfdbfe 0%, #dbeafe 50%, #eff6ff 100%);
     color: var(--gray-900);
     margin: 0;
     padding: 0;
