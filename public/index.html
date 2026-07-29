@@ -220,4 +220,226 @@
 
     <script src="script.js"></script>
 </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veyr Stays System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Veyr Stays Dashboard</h1>
+            <div class="header-actions">
+                <button id="openBookingModal" class="btn-primary">+ Add Booking</button>
+                <button id="openMonthlyExpenseModal" class="btn-secondary" style="background-color: #0f172a; color: white;">⚙️ Set Monthly Bills (Rent/Elec/Net)</button>
+                <button id="openFinanceModal" class="btn-secondary">+ Add Other Expense / Investment</button>
+            </div>
+        </header>
+
+        <!-- Dashboard Metrics Summary -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <h3>Total Revenue</h3>
+                <p id="totalRevenue">0 PKR</p>
+            </div>
+            <div class="metric-card">
+                <h3>Total Expenses (Incl. Auto Bills)</h3>
+                <p id="totalExpenses">0 PKR</p>
+            </div>
+            <div class="metric-card">
+                <h3>Total Investments</h3>
+                <p id="totalInvestments">0 PKR</p>
+            </div>
+            <div class="metric-card" style="border-left: 4px solid #2563eb;">
+                <h3>Net Profit</h3>
+                <p id="netProfit">0 PKR</p>
+            </div>
+        </section>
+
+        <!-- Bookings Section with Search & Responsive Scroll Wrapper -->
+        <section class="card-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="margin: 0;">Bookings Management</h2>
+                <div style="width: 300px; max-width: 100%;">
+                    <input type="text" id="searchBookingInput" placeholder="Search booking by guest name..." style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table" id="bookingsTable">
+                    <thead>
+                        <tr>
+                            <th>Guest Name</th>
+                            <th>Contact</th>
+                            <th>Room / Property</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Booking Type</th>
+                            <th>Amount</th>
+                            <th>Reference</th>
+                            <th>ID Front</th>
+                            <th>ID Back</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic rows injected via script.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Financial Tracking Section -->
+        <section class="financial-split-grid">
+            <div class="card-section">
+                <h2>Expenses Log (Includes Auto-Monthly Bills)</h2>
+                <div class="table-wrap">
+                    <table class="data-table" id="expensesTable">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <h2>Investments Log</h2>
+                <div class="table-wrap">
+                    <table class="data-table" id="investmentsTable">
+                        <thead>
+                            <tr>
+                                <th>Investor</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="bookingModal">&times;</span>
+            <h2>New Booking Entry</h2>
+            <form id="bookingForm">
+                <div class="form-group"><label>Guest Name</label><input type="text" id="guestName" required></div>
+                <div class="form-group"><label>Contact Number</label><input type="text" id="guestContact" required></div>
+                <div class="form-group"><label>Room / Property</label><input type="text" id="roomNumber" required></div>
+                <div class="form-group"><label>Check-In Date & Time</label><input type="datetime-local" id="checkInDate" required></div>
+                <div class="form-group"><label>Check-Out Date & Time</label><input type="datetime-local" id="checkOutDate" required></div>
+                <div class="form-group">
+                    <label>Booking Type</label>
+                    <select id="bookingType" required>
+                        <option value="Full Day">Full Day</option>
+                        <option value="Short Booking">Short Booking</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Amount (PKR)</label><input type="number" id="bookingAmount" required></div>
+                <div class="form-group"><label>Booking Reference / Source</label><input type="text" id="bookingReference" placeholder="e.g., Walk-in, Booking.com, Phone"></div>
+                <div class="form-group"><label>Upload ID Card Front Image</label><input type="file" id="idCardFrontFile" accept="image/*"></div>
+                <div class="form-group"><label>Upload ID Card Back Image</label><input type="file" id="idCardBackFile" accept="image/*"></div>
+                <button type="submit" class="btn-primary">Save Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Booking Modal -->
+    <div id="editBookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="editBookingModal">&times;</span>
+            <h2>Edit Booking</h2>
+            <form id="editBookingForm">
+                <input type="hidden" id="editBookingId">
+                <div class="form-group">
+                    <label for="editGuestName">Guest Name</label>
+                    <input type="text" id="editGuestName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editGuestContact">Contact Number</label>
+                    <input type="text" id="editGuestContact" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRoomNumber">Room Number</label>
+                    <input type="text" id="editRoomNumber" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCheckInDate">Check-In Date & Time</label>
+                    <input type="datetime-local" id="editCheckInDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCheckOutDate">Check-Out Date & Time</label>
+                    <input type="datetime-local" id="editCheckOutDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingType">Booking Type</label>
+                    <select id="editBookingType">
+                        <option value="Full Day">Full Day</option>
+                        <option value="Short Booking">Short Booking</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingAmount">Payment Amount (PKR)</label>
+                    <input type="number" id="editBookingAmount" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingReference">Reference / Source</label>
+                    <input type="text" id="editBookingReference">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Update Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Monthly Automated Bills Configuration Modal -->
+    <div id="monthlyExpenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="monthlyExpenseModal">&times;</span>
+            <h2>Configure Monthly Fixed Bills</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">These expenses will automatically apply to your totals on the 1st of every month.</p>
+            <form id="monthlyBillsForm">
+                <div class="form-group"><label>Monthly Rent (PKR)</label><input type="number" id="monthlyRent" placeholder="0" required></div>
+                <div class="form-group"><label>Monthly Electric Bill (PKR)</label><input type="number" id="monthlyElectric" placeholder="0" required></div>
+                <div class="form-group"><label>Monthly Internet Bill (PKR)</label><input type="number" id="monthlyInternet" placeholder="0" required></div>
+                <button type="submit" class="btn-primary">Save & Apply Monthly Bills</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Separate Finance Modal (Other Expenses & Investments) -->
+    <div id="financeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="financeModal">&times;</span>
+            <h2>Add Custom Expense or Investment</h2>
+            <form id="financeForm">
+                <div class="form-group">
+                    <label>Entry Type</label>
+                    <select id="financeType" required>
+                        <option value="expense">Expense</option>
+                        <option value="investment">Investment</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Title / Category</label><input type="text" id="financeCategory" required></div>
+                <div class="form-group"><label>Description</label><input type="text" id="financeDescription"></div>
+                <div class="form-group"><label>Amount (PKR)</label><input type="number" id="financeAmount" required></div>
+                <div class="form-group"><label>Date</label><input type="date" id="financeDate" required></div>
+                <button type="submit" class="btn-primary">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
