@@ -42,7 +42,9 @@ const expenseSchema = new mongoose.Schema({
     expense_title: String,
     amount: Number,
     expense_date: String,
-    created_at: String
+    created_at: String,
+    bill_type: String,
+    bill_month: String
 }, { versionKey: false });
 
 const investmentSchema = new mongoose.Schema({
@@ -151,10 +153,10 @@ app.put('/api/bookings/:id', async (req, res) => {
 
 app.post('/api/expenses', async (req, res) => {
     try {
-        const { expense_title, amount, expense_date } = req.body;
+        const { expense_title, amount, expense_date, bill_type, bill_month } = req.body;
         const created_at = new Date().toISOString().split('T')[0];
 
-        const expense = await Expense.create({ expense_title, amount, expense_date, created_at });
+        const expense = await Expense.create({ expense_title, amount, expense_date, created_at, bill_type, bill_month });
         res.json({ success: true, id: expense._id });
     } catch (err) {
         res.json({ success: false, error: err.message });

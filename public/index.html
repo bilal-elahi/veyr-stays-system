@@ -12,7 +12,7 @@
             <h1>Veyr Stays Dashboard</h1>
             <div class="header-actions">
                 <button id="openBookingModal" class="btn-primary">+ Add Booking</button>
-                <button id="openMonthlyExpenseModal" class="btn-secondary btn-dark">Set Monthly Bills (Rent/Elec/Net)</button>
+                <button id="openBillModal" class="btn-secondary btn-dark">+ Add Bill</button>
                 <button id="openFinanceModal" class="btn-secondary">+ Add Other Expense / Investment</button>
             </div>
         </header>
@@ -105,10 +105,11 @@
                     <table class="data-table" id="expensesTable">
                         <thead>
                             <tr>
-                                <th>Category</th>
+                                <th>Type</th>
                                 <th>Description</th>
                                 <th>Amount</th>
                                 <th>Date</th>
+                                <th>Month</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -211,17 +212,31 @@
         </div>
     </div>
 
-    <!-- Monthly Automated Bills Configuration Modal -->
-    <div id="monthlyExpenseModal" class="modal">
+    <!-- Add Bill Modal -->
+    <div id="billModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" data-target="monthlyExpenseModal">&times;</span>
-            <h2>Configure Monthly Fixed Bills</h2>
-            <p class="modal-desc">These expenses will automatically apply to your totals on the 1st of every month.</p>
-            <form id="monthlyBillsForm">
-                <div class="form-group"><label>Monthly Rent (PKR)</label><input type="number" id="monthlyRent" placeholder="0" required></div>
-                <div class="form-group"><label>Monthly Electric Bill (PKR)</label><input type="number" id="monthlyElectric" placeholder="0" required></div>
-                <div class="form-group"><label>Monthly Internet Bill (PKR)</label><input type="number" id="monthlyInternet" placeholder="0" required></div>
-                <button type="submit" class="btn-primary">Save & Apply Monthly Bills</button>
+            <span class="close-modal" data-target="billModal">&times;</span>
+            <h2>Add New Bill</h2>
+            <form id="billForm">
+                <div class="form-group">
+                    <label>Bill Month</label>
+                    <input type="month" id="billMonth" required>
+                </div>
+                <div class="form-group">
+                    <label>Bill Type</label>
+                    <select id="billType" required>
+                        <option value="Rent">Rent</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Internet">Internet</option>
+                        <option value="Water">Water</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Description (optional)</label><input type="text" id="billDescription" placeholder="e.g., July rent, August electricity bill"></div>
+                <div class="form-group"><label>Amount (PKR)</label><input type="number" id="billAmount" required></div>
+                <button type="submit" class="btn-primary">Save Bill</button>
             </form>
         </div>
     </div>

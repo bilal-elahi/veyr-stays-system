@@ -6,13 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchDashboardData();
 
     setupModal("openBookingModal", "bookingModal", "close-modal");
-    setupModal("openMonthlyExpenseModal", "monthlyExpenseModal", "close-modal");
+    setupModal("openBillModal", "billModal", "close-modal");
     setupModal("openFinanceModal", "financeModal", "close-modal");
     setupModal(null, "editBookingModal", "close-modal"); // Setup edit modal closing events
 
     document.getElementById("bookingForm").addEventListener("submit", handleBookingSubmit);
     document.getElementById("editBookingForm").addEventListener("submit", handleEditBookingSubmit);
-    document.getElementById("monthlyBillsForm").addEventListener("submit", handleMonthlyBillsSubmit);
+    document.getElementById("billForm").addEventListener("submit", handleBillSubmit);
     document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
 
     document.getElementById("searchBookingInput").addEventListener("input", (e) => {
@@ -40,8 +40,9 @@ function setupModal(openBtnId, modalId, closeClass) {
     if (openBtn) {
         openBtn.addEventListener("click", () => {
             modal.style.display = "flex";
-            if (modalId === 'monthlyExpenseModal') {
-                loadExistingMonthlyConfig();
+            if (modalId === 'billModal') {
+                const now = new Date();
+                document.getElementById("billMonth").value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             }
         });
     }
@@ -71,9 +72,9 @@ async function checkAndApplyMonthlyBills() {
             const dateStr = now.toISOString().split('T')[0];
             
             const autoBills = [
-                { expense_title: "Rent - Automated Monthly Rent", amount: config.rent, expense_date: dateStr },
-                { expense_title: "Electric Bill - Automated Monthly Electricity", amount: config.electric, expense_date: dateStr },
-                { expense_title: "Internet Bill - Automated Monthly Internet", amount: config.internet, expense_date: dateStr }
+                { expense_title: "Rent - Automated Monthly Rent", amount: config.rent, expense_date: dateStr, bill_type: "Rent", bill_month: currentYearMonth },
+                { expense_title: "Electric Bill - Automated Monthly Electricity", amount: config.electric, expense_date: dateStr, bill_type: "Electric", bill_month: currentYearMonth },
+                { expense_title: "Internet Bill - Automated Monthly Internet", amount: config.internet, expense_date: dateStr, bill_type: "Internet", bill_month: currentYearMonth }
             ];
 
             for (const bill of autoBills) {
@@ -92,54 +93,31 @@ async function checkAndApplyMonthlyBills() {
     }
 }
 
-async function loadExistingMonthlyConfig() {
-    try {
-        const response = await fetch('/api/data');
-        const data = await response.json();
-        if (data.monthlyConfig) {
-            document.getElementById("monthlyRent").value = data.monthlyConfig.rent || "";
-            document.getElementById("monthlyElectric").value = data.monthlyConfig.electric || "";
-            document.getElementById("monthlyInternet").value = data.monthlyConfig.internet || "";
-        }
-    } catch (err) {
-        console.error("Error loading config:", err);
-    }
-}
-
-async function handleMonthlyBillsSubmit(e) {
+async function handleBillSubmit(e) {
     e.preventDefault();
-    const config = {
-        rent: Number(document.getElementById("monthlyRent").value || 0),
-        electric: Number(document.getElementById("monthlyElectric").value || 0),
-        internet: Number(document.getElementById("monthlyInternet").value || 0)
+    const billMonth = document.getElementById("billMonth").value;
+    const billType = document.getElementById("billType").value;
+    const description = document.getElementById("billDescription").value;
+    const amount = Number(document.getElementById("billAmount").value) || 0;
+
+    if (!amount) return;
+
+    const payload = {
+        expense_title: billType + (description ? ' - ' + description : ''),
+        amount: amount,
+        expense_date: billMonth + '-01',
+        bill_type: billType,
+        bill_month: billMonth
     };
 
-    await fetch('/api/config/monthly', {
+    await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config)
+        body: JSON.stringify(payload)
     });
-    
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    
-    const bills = [
-        { expense_title: "Rent - Monthly Fixed Rent", amount: config.rent, expense_date: dateStr },
-        { expense_title: "Electric Bill - Monthly Fixed Electric Bill", amount: config.electric, expense_date: dateStr },
-        { expense_title: "Internet Bill - Monthly Fixed Internet Bill", amount: config.internet, expense_date: dateStr }
-    ];
 
-    for (const bill of bills) {
-        if (bill.amount > 0) {
-            await fetch('/api/expenses', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bill)
-            });
-        }
-    }
-
-    document.getElementById("monthlyExpenseModal").style.display = "none";
+    document.getElementById("billModal").style.display = "none";
+    e.target.reset();
     fetchDashboardData();
 }
 
@@ -200,8 +178,9 @@ function renderBookingsTable(bookings) {
 
 }
 
-function categorizeExpense(title) {
-    const t = (title || '').toLowerCase();
+function categorizeExpense(expense) {
+    if (expense.bill_type) return expense.bill_type.toLowerCase();
+    const t = (expense.expense_title || '').toLowerCase();
     if (t.includes('rent')) return 'rent';
     if (t.includes('electric')) return 'electric';
     if (t.includes('internet')) return 'internet';
@@ -212,7 +191,7 @@ function renderFilteredExpenses() {
     const monthInput = document.getElementById("expenseMonthFilter");
     const selectedMonth = monthInput.value;
     if (!selectedMonth || !allExpensesCache.length) {
-        document.querySelector("#expensesTable tbody").innerHTML = '<tr><td colspan="4" class="empty-state">No expenses found</td></tr>';
+        document.querySelector("#expensesTable tbody").innerHTML = '<tr><td colspan="5" class="empty-state">No expenses found</td></tr>';
         document.getElementById("monthTotalExpense").innerText = '0 PKR';
         document.getElementById("monthRentExpense").innerText = '0 PKR';
         document.getElementById("monthElectricExpense").innerText = '0 PKR';
@@ -228,14 +207,15 @@ function renderFilteredExpenses() {
 
     const expenseTbody = document.querySelector("#expensesTable tbody");
     if (!filtered.length) {
-        expenseTbody.innerHTML = '<tr><td colspan="4" class="empty-state">No expenses for this month</td></tr>';
+        expenseTbody.innerHTML = '<tr><td colspan="5" class="empty-state">No expenses for this month</td></tr>';
     } else {
         expenseTbody.innerHTML = filtered.map(e =>
             '<tr>' +
-            '<td>' + (e.expense_title || e.category || '-') + '</td>' +
-            '<td>' + (e.description || '-') + '</td>' +
+            '<td>' + (e.bill_type || (e.expense_title || '-')) + '</td>' +
+            '<td>' + (e.expense_title || '-') + '</td>' +
             '<td>' + e.amount + ' PKR</td>' +
             '<td>' + (e.expense_date || e.date || e.created_at) + '</td>' +
+            '<td>' + (e.bill_month || (e.expense_date ? e.expense_date.substring(0, 7) : '-')) + '</td>' +
             '</tr>'
         ).join('');
     }
@@ -244,7 +224,7 @@ function renderFilteredExpenses() {
     filtered.forEach(e => {
         const amt = Number(e.amount || 0);
         total += amt;
-        const cat = categorizeExpense(e.expense_title);
+        const cat = categorizeExpense(e);
         if (cat === 'rent') rent += amt;
         else if (cat === 'electric') electric += amt;
         else if (cat === 'internet') internet += amt;
