@@ -127,6 +127,7 @@
                                 <th>Amount</th>
                                 <th>Date</th>
                                 <th>Month</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -144,6 +145,7 @@
                                 <th>Description</th>
                                 <th>Amount</th>
                                 <th>Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -280,6 +282,37 @@
                 <div class="form-group"><label>Amount (PKR)</label><input type="number" id="financeAmount" required></div>
                 <div class="form-group"><label>Date</label><input type="date" id="financeDate" required></div>
                 <button type="submit" class="btn-primary">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Expense Modal -->
+    <div id="editExpenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="editExpenseModal">&times;</span>
+            <h2>Edit Expense</h2>
+            <form id="editExpenseForm">
+                <input type="hidden" id="editExpenseId">
+                <div class="form-group"><label>Title / Category</label><input type="text" id="editExpenseCategory" required></div>
+                <div class="form-group"><label>Description</label><input type="text" id="editExpenseDescription"></div>
+                <div class="form-group"><label>Amount (PKR)</label><input type="number" id="editExpenseAmount" required></div>
+                <div class="form-group"><label>Date</label><input type="date" id="editExpenseDate" required></div>
+                <button type="submit" class="btn-primary">Update Expense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Investment Modal -->
+    <div id="editInvestmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="editInvestmentModal">&times;</span>
+            <h2>Edit Investment</h2>
+            <form id="editInvestmentForm">
+                <input type="hidden" id="editInvestmentId">
+                <div class="form-group"><label>Investor Name</label><input type="text" id="editInvestorName" required></div>
+                <div class="form-group"><label>Amount (PKR)</label><input type="number" id="editInvestmentAmount" required></div>
+                <div class="form-group"><label>Date</label><input type="date" id="editInvestmentDate" required></div>
+                <button type="submit" class="btn-primary">Update Investment</button>
             </form>
         </div>
     </div>

@@ -1,5 +1,6 @@
 let allBookingsCache = [];
 let allExpensesCache = [];
+let allInvestmentsCache = [];
 
 function getToken() { return sessionStorage.getItem('veyr_token') }
 
@@ -57,6 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("editBookingForm").addEventListener("submit", handleEditBookingSubmit);
     document.getElementById("billForm").addEventListener("submit", handleBillSubmit);
     document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
+    document.getElementById("editExpenseForm").addEventListener("submit", handleEditExpenseSubmit);
+    document.getElementById("editInvestmentForm").addEventListener("submit", handleEditInvestmentSubmit);
 
     document.getElementById("searchBookingInput").addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase().trim();
@@ -269,7 +272,7 @@ function renderFilteredExpenses() {
     const monthInput = document.getElementById("expenseMonthFilter");
     const selectedMonth = monthInput.value;
     if (!selectedMonth || !allExpensesCache.length) {
-        document.querySelector("#expensesTable tbody").innerHTML = '<tr><td colspan="5" class="empty-state">No expenses found</td></tr>';
+        document.querySelector("#expensesTable tbody").innerHTML = '<tr><td colspan="6" class="empty-state">No expenses found</td></tr>';
         document.getElementById("monthTotalExpense").innerText = '0 PKR';
         document.getElementById("monthRentExpense").innerText = '0 PKR';
         document.getElementById("monthElectricExpense").innerText = '0 PKR';
@@ -285,7 +288,7 @@ function renderFilteredExpenses() {
 
     const expenseTbody = document.querySelector("#expensesTable tbody");
     if (!filtered.length) {
-        expenseTbody.innerHTML = '<tr><td colspan="5" class="empty-state">No expenses for this month</td></tr>';
+        expenseTbody.innerHTML = '<tr><td colspan="6" class="empty-state">No expenses for this month</td></tr>';
     } else {
         expenseTbody.innerHTML = filtered.map(e =>
             '<tr>' +
@@ -294,6 +297,10 @@ function renderFilteredExpenses() {
             '<td>' + e.amount + ' PKR</td>' +
             '<td>' + (e.expense_date || e.date || e.created_at) + '</td>' +
             '<td>' + (e.bill_month || (e.expense_date ? e.expense_date.substring(0, 7) : '-')) + '</td>' +
+            '<td class="actions-cell">' +
+                '<button onclick="openEditExpenseModal(\'' + e._id + '\')" class="btn-primary btn-sm">Edit</button>' +
+                '<button onclick="deleteExpense(\'' + e._id + '\')" class="btn-danger btn-sm">Delete</button>' +
+            '</td>' +
             '</tr>'
         ).join('');
     }
@@ -318,18 +325,27 @@ function renderFilteredExpenses() {
 
 function populateFinanceTables(data) {
     allExpensesCache = data.expenses || [];
+    allInvestmentsCache = data.investments || [];
     renderFilteredExpenses();
 
     const investmentTbody = document.querySelector("#investmentsTable tbody");
     if (investmentTbody && data.investments) {
-        investmentTbody.innerHTML = data.investments.map(i => 
-            '<tr>' +
-            '<td>' + (i.investor_name || i.category || '-') + '</td>' +
-            '<td>' + (i.description || '-') + '</td>' +
-            '<td>' + i.amount + ' PKR</td>' +
-            '<td>' + (i.investment_date || i.date || i.created_at) + '</td>' +
-            '</tr>'
-        ).join('');
+        if (!data.investments.length) {
+            investmentTbody.innerHTML = '<tr><td colspan="5" class="empty-state">No investments found</td></tr>';
+        } else {
+            investmentTbody.innerHTML = data.investments.map(i => 
+                '<tr>' +
+                '<td>' + (i.investor_name || i.category || '-') + '</td>' +
+                '<td>' + (i.description || '-') + '</td>' +
+                '<td>' + i.amount + ' PKR</td>' +
+                '<td>' + (i.investment_date || i.date || i.created_at) + '</td>' +
+                '<td class="actions-cell">' +
+                    '<button onclick="openEditInvestmentModal(\'' + i._id + '\')" class="btn-primary btn-sm">Edit</button>' +
+                    '<button onclick="deleteInvestment(\'' + i._id + '\')" class="btn-danger btn-sm">Delete</button>' +
+                '</td>' +
+                '</tr>'
+            ).join('');
+        }
     }
 }
 
@@ -560,5 +576,104 @@ async function handleFinanceSubmit(e) {
 
     document.getElementById("financeModal").style.display = "none";
     e.target.reset();
+    fetchDashboardData();
+}
+
+function openEditExpenseModal(id) {
+    const expense = allExpensesCache.find(e => String(e._id) === String(id));
+    if (!expense) return;
+
+    const title = expense.expense_title || '';
+    const dashIdx = title.indexOf(' - ');
+    const category = dashIdx > -1 ? title.substring(0, dashIdx) : title;
+    const desc = dashIdx > -1 ? title.substring(dashIdx + 3) : '';
+
+    document.getElementById("editExpenseId").value = expense._id;
+    document.getElementById("editExpenseCategory").value = category;
+    document.getElementById("editExpenseDescription").value = desc;
+    document.getElementById("editExpenseAmount").value = expense.amount || 0;
+    document.getElementById("editExpenseDate").value = expense.expense_date || expense.date || expense.created_at || '';
+
+    document.getElementById("editExpenseModal").style.display = "flex";
+}
+
+async function handleEditExpenseSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("editExpenseId").value;
+    const category = document.getElementById("editExpenseCategory").value;
+    const desc = document.getElementById("editExpenseDescription").value;
+    const expense_title = category + (desc ? ' - ' + desc : '');
+
+    const payload = {
+        expense_title,
+        amount: Number(document.getElementById("editExpenseAmount").value),
+        expense_date: document.getElementById("editExpenseDate").value
+    };
+
+    const res = await apiFetch('/api/expenses/' + id, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (!result.success) { alert(result.error || 'Failed to update expense'); return; }
+
+    document.getElementById("editExpenseModal").style.display = "none";
+    fetchDashboardData();
+}
+
+async function deleteExpense(id) {
+    if (!confirm("Are you sure you want to delete this expense?")) return;
+
+    const res = await apiFetch('/api/expenses/' + id, {
+        method: 'DELETE'
+    });
+    const result = await res.json();
+    if (!result.success) { alert(result.error || 'Failed to delete expense'); return; }
+
+    fetchDashboardData();
+}
+
+function openEditInvestmentModal(id) {
+    const investment = allInvestmentsCache.find(i => String(i._id) === String(id));
+    if (!investment) return;
+
+    document.getElementById("editInvestmentId").value = investment._id;
+    document.getElementById("editInvestorName").value = investment.investor_name || investment.category || '';
+    document.getElementById("editInvestmentAmount").value = investment.amount || 0;
+    document.getElementById("editInvestmentDate").value = investment.investment_date || investment.date || investment.created_at || '';
+
+    document.getElementById("editInvestmentModal").style.display = "flex";
+}
+
+async function handleEditInvestmentSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("editInvestmentId").value;
+
+    const payload = {
+        investor_name: document.getElementById("editInvestorName").value,
+        amount: Number(document.getElementById("editInvestmentAmount").value),
+        investment_date: document.getElementById("editInvestmentDate").value
+    };
+
+    const res = await apiFetch('/api/investments/' + id, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (!result.success) { alert(result.error || 'Failed to update investment'); return; }
+
+    document.getElementById("editInvestmentModal").style.display = "none";
+    fetchDashboardData();
+}
+
+async function deleteInvestment(id) {
+    if (!confirm("Are you sure you want to delete this investment?")) return;
+
+    const res = await apiFetch('/api/investments/' + id, {
+        method: 'DELETE'
+    });
+    const result = await res.json();
+    if (!result.success) { alert(result.error || 'Failed to delete investment'); return; }
+
     fetchDashboardData();
 }

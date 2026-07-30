@@ -254,6 +254,27 @@ app.post('/api/expenses', authMiddleware, async (req, res) => {
     }
 });
 
+app.put('/api/expenses/:id', authMiddleware, async (req, res) => {
+    try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
+        const { expense_title, amount, expense_date, bill_type, bill_month } = req.body;
+        await Expense.updateOne({ _id: req.params.id }, { expense_title, amount, expense_date, bill_type, bill_month });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/expenses/:id', authMiddleware, async (req, res) => {
+    try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
+        await Expense.deleteOne({ _id: req.params.id });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/investments', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
@@ -262,6 +283,27 @@ app.post('/api/investments', authMiddleware, async (req, res) => {
 
         const investment = await Investment.create({ investor_name, amount, investment_date, created_at });
         res.json({ success: true, id: investment._id });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+app.put('/api/investments/:id', authMiddleware, async (req, res) => {
+    try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
+        const { investor_name, amount, investment_date } = req.body;
+        await Investment.updateOne({ _id: req.params.id }, { investor_name, amount, investment_date });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/investments/:id', authMiddleware, async (req, res) => {
+    try {
+        if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
+        await Investment.deleteOne({ _id: req.params.id });
+        res.json({ success: true });
     } catch (err) {
         res.json({ success: false, error: err.message });
     }
