@@ -45,6 +45,7 @@ mongoose.connection.on('error', err => {
 });
 
 const bookingSchema = new mongoose.Schema({
+    booking_number: Number,
     guest_name: String,
     reference_name: String,
     reference_contact: String,
@@ -177,8 +178,11 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
             uploadImage(cnic_back)
         ]);
 
+        const lastBooking = await Booking.findOne().sort({ booking_number: -1 }).select('booking_number').lean();
+        const booking_number = (lastBooking?.booking_number || 0) + 1;
+
         const booking = await Booking.create({
-            guest_name, reference_name, reference_contact, roomNumber,
+            booking_number, guest_name, reference_name, reference_contact, roomNumber,
             check_in_date: check_in, checkOutDate, bookingType,
             payment_amount: Number(payment_amount) || 0,
             payment_status: payment_status || 'Paid',

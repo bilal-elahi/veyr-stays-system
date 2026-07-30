@@ -227,7 +227,7 @@ function renderBookingsTable(bookings) {
     if (!bookingTbody) return;
 
     if (!bookings || bookings.length === 0) {
-        bookingTbody.innerHTML = '<tr><td colspan="12" class="empty-state">No bookings found</td></tr>';
+        bookingTbody.innerHTML = '<tr><td colspan="13" class="empty-state">No bookings found</td></tr>';
         return;
     }
 
@@ -245,6 +245,7 @@ function renderBookingsTable(bookings) {
         const backLink = '<button class="btn-secondary btn-sm" onclick="loadCnicImage(\'' + b.id + '\',\'back\')">Back</button>';
 
         return '<tr>' +
+            '<td>' + (b.booking_number || '-') + '</td>' +
             '<td>' + name + '</td>' +
             '<td>' + contact + '</td>' +
             '<td>' + room + '</td>' +
@@ -370,6 +371,7 @@ function calculateMetrics(data) {
     const netProf = totalRev - totalExp;
 
     document.getElementById("totalRevenue").innerText = totalRev.toLocaleString() + " PKR";
+    document.getElementById("totalBookings").innerText = bookings.length;
     document.getElementById("pendingRevenue").innerText = pendingRev.toLocaleString() + " PKR";
     document.getElementById("totalExpenses").innerText = totalExp.toLocaleString() + " PKR";
     document.getElementById("totalInvestments").innerText = totalInv.toLocaleString() + " PKR";
