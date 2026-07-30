@@ -1,9 +1,50 @@
 let allBookingsCache = [];
 let allExpensesCache = [];
 
+function getToken() { return sessionStorage.getItem('veyr_token') }
+
+function authHeaders() {
+    const t = getToken();
+    return t ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } : { 'Content-Type': 'application/json' }
+}
+
+async function apiFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = { ...authHeaders(), ...(opts.headers || {}) };
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+        sessionStorage.removeItem('veyr_token');
+        document.getElementById('loginOverlay').style.display = 'flex';
+        throw new Error('Session expired. Please login again.');
+    }
+    return res;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    if (!getToken()) document.getElementById('loginOverlay').style.display = 'flex';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errEl = document.getElementById('loginError');
+        errEl.style.display = 'none';
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value })
+        });
+        const data = await res.json();
+        if (data.success) {
+            sessionStorage.setItem('veyr_token', data.token);
+            document.getElementById('loginOverlay').style.display = 'none';
+            fetchDashboardData();
+        } else {
+            errEl.textContent = data.error || 'Invalid credentials';
+            errEl.style.display = 'block';
+        }
+    });
+
     checkAndApplyMonthlyBills();
-    fetchDashboardData();
+    if (getToken()) fetchDashboardData();
 
     setupModal("openBookingModal", "bookingModal", "close-modal");
     setupModal("openBillModal", "billModal", "close-modal");
@@ -80,12 +121,11 @@ async function checkAndApplyMonthlyBills() {
             ];
 
             for (const bill of autoBills) {
-                if (bill.amount > 0) {
-                    await fetch('/api/expenses', {
+                if (bill.amount > 0 && getToken()) {
+                    await apiFetch('/api/expenses', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(bill)
-                    });
+                    }).catch(() => {});
                 }
             }
             localStorage.setItem("veyr_last_applied_month", currentYearMonth);
@@ -112,9 +152,8 @@ async function handleBillSubmit(e) {
         bill_month: billMonth
     };
 
-    const res = await fetch('/api/expenses', {
+    const res = await apiFetch('/api/expenses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     });
     const result = await res.json();
@@ -339,9 +378,8 @@ async function handleBookingSubmit(e) {
     };
 
     try {
-        const res = await fetch('/api/bookings', {
+        const res = await apiFetch('/api/bookings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         const result = await res.json();
@@ -409,9 +447,8 @@ async function handleEditBookingSubmit(e) {
     };
 
     try {
-        const response = await fetch(`/api/bookings/${id}`, {
+        const response = await apiFetch(`/api/bookings/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
@@ -432,7 +469,7 @@ async function handleEditBookingSubmit(e) {
 async function deleteBooking(id) {
     if (!confirm("Are you sure you want to delete this booking?")) return;
 
-    const response = await fetch(`/api/bookings/${id}`, {
+    const response = await apiFetch(`/api/bookings/${id}`, {
         method: 'DELETE'
     });
 
@@ -449,7 +486,7 @@ async function handleExport() {
     btn.disabled = true;
     btn.textContent = 'Preparing...';
     try {
-        const res = await fetch('/api/export');
+        const res = await apiFetch('/api/export');
         if (!res.ok) {
             const msg = await res.json().catch(() => ({}));
             alert(msg.error || 'Export failed');
@@ -481,9 +518,8 @@ async function handleFinanceSubmit(e) {
             expense_date: document.getElementById("financeDate").value
         };
 
-        const res = await fetch('/api/expenses', {
+        const res = await apiFetch('/api/expenses', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         const result = await res.json();
@@ -495,9 +531,8 @@ async function handleFinanceSubmit(e) {
             investment_date: document.getElementById("financeDate").value
         };
 
-        const res = await fetch('/api/investments', {
+        const res = await apiFetch('/api/investments', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         const result = await res.json();

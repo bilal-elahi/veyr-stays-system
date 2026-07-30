@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const archiver = require('archiver');
 const cloudinary = require('cloudinary').v2;
+const jwt = require('jsonwebtoken');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
@@ -15,6 +16,10 @@ cloudinary.config({
 const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 if (useCloudinary) console.log('Cloudinary enabled');
 else console.log('Cloudinary not configured — images stored as base64 in MongoDB');
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'veyradmin123';
+const JWT_SECRET = process.env.JWT_SECRET || 'veyr-stays-jwt-secret-' + Math.random().toString(36).slice(2);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,6 +85,26 @@ const Expense = mongoose.model('Expense', expenseSchema);
 const Investment = mongoose.model('Investment', investmentSchema);
 const MonthlyConfig = mongoose.model('MonthlyConfig', monthlyConfigSchema);
 
+function authMiddleware(req, res, next) {
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        jwt.verify(header.split(' ')[1], JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+}
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
+        return res.json({ success: true, token });
+    }
+    res.json({ success: false, error: 'Invalid credentials' });
+});
+
 app.get('/api/data', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -111,7 +136,7 @@ function isDbConnected() {
     return mongoose.connection.readyState === 1;
 }
 
-app.post('/api/config/monthly', async (req, res) => {
+app.post('/api/config/monthly', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { rent, electric, internet } = req.body;
@@ -140,7 +165,7 @@ async function uploadImage(base64Str) {
     }
 }
 
-app.post('/api/bookings', async (req, res) => {
+app.post('/api/bookings', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back } = req.body;
@@ -164,7 +189,7 @@ app.post('/api/bookings', async (req, res) => {
     }
 });
 
-app.delete('/api/bookings/:id', async (req, res) => {
+app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ error: 'Database not connected' });
         const result = await Booking.deleteOne({ _id: req.params.id });
@@ -174,7 +199,7 @@ app.delete('/api/bookings/:id', async (req, res) => {
     }
 });
 
-app.put('/api/bookings/:id', async (req, res) => {
+app.put('/api/bookings/:id', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ error: 'Database not connected' });
         const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name, cnic_front, cnic_back } = req.body;
@@ -190,7 +215,7 @@ app.put('/api/bookings/:id', async (req, res) => {
     }
 });
 
-app.post('/api/expenses', async (req, res) => {
+app.post('/api/expenses', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { expense_title, amount, expense_date, bill_type, bill_month } = req.body;
@@ -203,7 +228,7 @@ app.post('/api/expenses', async (req, res) => {
     }
 });
 
-app.post('/api/investments', async (req, res) => {
+app.post('/api/investments', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { investor_name, amount, investment_date } = req.body;
