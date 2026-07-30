@@ -5,6 +5,16 @@ const cors = require('cors');
 const fs = require('fs');
 const os = require('os');
 const archiver = require('archiver');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+    api_key: process.env.CLOUDINARY_API_KEY || '',
+    api_secret: process.env.CLOUDINARY_API_SECRET || ''
+});
+const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+if (useCloudinary) console.log('Cloudinary enabled');
+else console.log('Cloudinary not configured — images stored as base64 in MongoDB');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -116,17 +126,36 @@ app.post('/api/config/monthly', async (req, res) => {
     }
 });
 
+async function uploadImage(base64Str) {
+    if (!base64Str) return '';
+    if (!useCloudinary) return base64Str;
+    try {
+        const result = await cloudinary.uploader.upload(base64Str, {
+            folder: 'veyr_stays',
+            transformation: { width: 1200, quality: 60, fetch_format: 'auto' }
+        });
+        return result.secure_url;
+    } catch {
+        return base64Str;
+    }
+}
+
 app.post('/api/bookings', async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
         const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back } = req.body;
         const created_at = new Date().toISOString().split('T')[0];
 
+        const [cnicFrontUrl, cnicBackUrl] = await Promise.all([
+            uploadImage(cnic_front),
+            uploadImage(cnic_back)
+        ]);
+
         const booking = await Booking.create({
             guest_name, reference_name, reference_contact, roomNumber,
             check_in_date: check_in, checkOutDate, bookingType,
             payment_amount: Number(payment_amount) || 0,
-            cnic_front: cnic_front || '', cnic_back: cnic_back || '', created_at
+            cnic_front: cnicFrontUrl || '', cnic_back: cnicBackUrl || '', created_at
         });
 
         res.json({ success: true, id: booking._id });
