@@ -273,6 +273,27 @@ function calculateMetrics(data) {
     document.getElementById("netProfit").innerText = netProf.toLocaleString() + " PKR";
 }
 
+function compressImage(file, maxSize) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxSize || h > maxSize) {
+                const ratio = Math.min(maxSize / w, maxSize / h);
+                w *= ratio; h *= ratio;
+            }
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            c.toBlob((blob) => {
+                resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+            }, 'image/jpeg', 0.6);
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
 async function handleBookingSubmit(e) {
     e.preventDefault();
 
@@ -291,10 +312,10 @@ async function handleBookingSubmit(e) {
     formData.set("reference_name", document.getElementById("bookingReference").value);
 
     if (frontInput.files && frontInput.files[0]) {
-        formData.set("cnic_front", frontInput.files[0]);
+        formData.set("cnic_front", await compressImage(frontInput.files[0], 1200));
     }
     if (backInput.files && backInput.files[0]) {
-        formData.set("cnic_back", backInput.files[0]);
+        formData.set("cnic_back", await compressImage(backInput.files[0], 1200));
     }
 
     try {
