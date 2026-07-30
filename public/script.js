@@ -407,11 +407,31 @@ async function deleteBooking(id) {
     }
 }
 
-function handleExport() {
-    const a = document.createElement('a');
-    a.href = '/api/export';
-    a.download = 'veyr_stays_export.zip';
-    a.click();
+async function handleExport() {
+    const btn = document.getElementById('exportBtn');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Preparing...';
+    try {
+        const res = await fetch('/api/export');
+        if (!res.ok) {
+            const msg = await res.json().catch(() => ({}));
+            alert(msg.error || 'Export failed');
+            return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'veyr_stays_export.zip';
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        alert('Export failed: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 
 async function handleFinanceSubmit(e) {

@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
+const os = require('os');
 const archiver = require('archiver');
 
 const app = express();
@@ -200,7 +201,7 @@ app.post('/api/investments', async (req, res) => {
 
 app.get('/api/export', async (req, res) => {
     try {
-        if (!isDbConnected()) return res.json({ error: 'Database not connected' });
+        if (!isDbConnected()) return res.status(503).json({ error: 'Database not connected' });
 
         const [bookings, expenses, investments, monthlyConfig] = await Promise.all([
             Booking.find().sort({ _id: -1 }).lean(),
@@ -209,11 +210,17 @@ app.get('/api/export', async (req, res) => {
             MonthlyConfig.findOne().sort({ _id: -1 }).lean()
         ]);
 
-        res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', 'attachment; filename=veyr_stays_export.zip');
-
+        const tmpFile = path.join(os.tmpdir(), 'veyr_export_' + Date.now() + '.zip');
+        const output = fs.createWriteStream(tmpFile);
         const archive = archiver('zip', { zlib: { level: 9 } });
-        archive.pipe(res);
+
+        const done = new Promise((resolve, reject) => {
+            output.on('close', resolve);
+            archive.on('error', reject);
+            output.on('error', reject);
+        });
+
+        archive.pipe(output);
 
         const data = {
             exported_at: new Date().toISOString(),
@@ -237,8 +244,12 @@ app.get('/api/export', async (req, res) => {
         }
 
         await archive.finalize();
+        await done;
+
+        res.download(tmpFile, 'veyr_stays_export.zip', () => fs.unlink(tmpFile, () => {}));
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        if (!res.headersSent) return res.status(500).json({ error: err.message });
+        res.end();
     }
 });
 
