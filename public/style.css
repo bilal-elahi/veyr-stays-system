@@ -65,9 +65,6 @@ body {
     justify-content: center;
     padding: 4px 12px;
     background: linear-gradient(135deg, var(--header-bg), #1e4d8c);
-    position: sticky;
-    top: 0;
-    z-index: 100;
     box-shadow: 0 4px 20px rgba(30, 58, 95, 0.3);
 }
 
@@ -152,7 +149,7 @@ body {
 }
 
 .main-content {
-    padding: 10px 10px;
+    padding: 14px 10px;
 }
 
 .metrics-grid {
