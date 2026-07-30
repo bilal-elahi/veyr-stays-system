@@ -163,7 +163,7 @@ function renderBookingsTable(bookings) {
         const frontImg = b.cnic_front || b.idCardFront;
         const backImg = b.cnic_back || b.idCardBack;
         
-        const imgSrc = (f) => f.startsWith('http') || f.startsWith('data') ? f : '/secure_uploads/' + encodeURIComponent(f);
+        const imgSrc = (f) => f && (f.startsWith('http') || f.startsWith('data:')) ? f : '';
         const frontLink = frontImg ? '<a href="' + imgSrc(frontImg) + '" target="_blank"><img src="' + imgSrc(frontImg) + '" class="cnic-thumb" alt="Front"></a>' : 'N/A';
         const backLink = backImg ? '<a href="' + imgSrc(backImg) + '" target="_blank"><img src="' + imgSrc(backImg) + '" class="cnic-thumb" alt="Back"></a>' : 'N/A';
 
@@ -290,7 +290,9 @@ function compressImage(file, maxSize) {
             const ctx = c.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
             c.toBlob((blob) => {
-                resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
             }, 'image/jpeg', 0.6);
         };
         img.src = URL.createObjectURL(file);
@@ -304,31 +306,30 @@ async function handleBookingSubmit(e) {
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
-    const formData = new FormData(e.target);
-
     const frontInput = document.getElementById("idCardFrontFile");
     const backInput = document.getElementById("idCardBackFile");
 
-    formData.set("guest_name", document.getElementById("guestName").value);
-    formData.set("reference_contact", document.getElementById("guestContact").value);
-    formData.set("roomNumber", document.getElementById("roomNumber").value);
-    formData.set("check_in", document.getElementById("checkInDate").value);
-    formData.set("checkOutDate", document.getElementById("checkOutDate").value);
-    formData.set("bookingType", document.getElementById("bookingType").value);
-    formData.set("payment_amount", Number(document.getElementById("bookingAmount").value));
-    formData.set("reference_name", document.getElementById("bookingReference").value);
+    let cnic_front = '', cnic_back = '';
+    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 1200);
+    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 1200);
 
-    if (frontInput.files && frontInput.files[0]) {
-        formData.set("cnic_front", await compressImage(frontInput.files[0], 1200));
-    }
-    if (backInput.files && backInput.files[0]) {
-        formData.set("cnic_back", await compressImage(backInput.files[0], 1200));
-    }
+    const payload = {
+        guest_name: document.getElementById("guestName").value,
+        reference_contact: document.getElementById("guestContact").value,
+        roomNumber: document.getElementById("roomNumber").value,
+        check_in: document.getElementById("checkInDate").value,
+        checkOutDate: document.getElementById("checkOutDate").value,
+        bookingType: document.getElementById("bookingType").value,
+        payment_amount: Number(document.getElementById("bookingAmount").value),
+        reference_name: document.getElementById("bookingReference").value,
+        cnic_front, cnic_back
+    };
 
     try {
         const res = await fetch('/api/bookings', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
         const result = await res.json();
 

@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
@@ -11,15 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
-app.use('/secure_uploads', express.static(path.join(__dirname, 'secure_uploads')));
-
-const uploadsDir = path.join(__dirname, 'secure_uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-}
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/veyr_stays';
 
@@ -77,12 +70,6 @@ const Expense = mongoose.model('Expense', expenseSchema);
 const Investment = mongoose.model('Investment', investmentSchema);
 const MonthlyConfig = mongoose.model('MonthlyConfig', monthlyConfigSchema);
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, path.join(__dirname, 'secure_uploads')),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage: storage });
-
 app.get('/api/data', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -129,19 +116,17 @@ app.post('/api/config/monthly', async (req, res) => {
     }
 });
 
-app.post('/api/bookings', upload.fields([{ name: 'cnic_front' }, { name: 'cnic_back' }]), async (req, res) => {
+app.post('/api/bookings', async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
-        const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount } = req.body;
-        const cnic_front = req.files && req.files['cnic_front'] ? req.files['cnic_front'][0].filename : '';
-        const cnic_back = req.files && req.files['cnic_back'] ? req.files['cnic_back'][0].filename : '';
+        const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back } = req.body;
         const created_at = new Date().toISOString().split('T')[0];
 
         const booking = await Booking.create({
             guest_name, reference_name, reference_contact, roomNumber,
             check_in_date: check_in, checkOutDate, bookingType,
             payment_amount: Number(payment_amount) || 0,
-            cnic_front, cnic_back, created_at
+            cnic_front: cnic_front || '', cnic_back: cnic_back || '', created_at
         });
 
         res.json({ success: true, id: booking._id });
@@ -231,18 +216,6 @@ app.get('/api/export', async (req, res) => {
             monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 }
         };
         archive.append(JSON.stringify(data, null, 2), { name: 'data.json' });
-
-        const uploadsDir = path.join(__dirname, 'secure_uploads');
-        if (fs.existsSync(uploadsDir)) {
-            const files = fs.readdirSync(uploadsDir);
-            for (const file of files) {
-                const filePath = path.join(uploadsDir, file);
-                const stat = fs.statSync(filePath);
-                if (stat.isFile()) {
-                    archive.file(filePath, { name: 'cnic_images/' + file });
-                }
-            }
-        }
 
         await archive.finalize();
         await done;
