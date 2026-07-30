@@ -17,8 +17,8 @@ const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDI
 if (useCloudinary) console.log('Cloudinary enabled');
 else console.log('Cloudinary not configured — images stored as base64 in MongoDB');
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'veyradmin123';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Veyr Stays';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '7583';
 const JWT_SECRET = process.env.JWT_SECRET || 'veyr-stays-jwt-secret-' + Math.random().toString(36).slice(2);
 
 const app = express();
