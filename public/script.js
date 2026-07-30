@@ -298,6 +298,10 @@ function compressImage(file, maxSize) {
 
 async function handleBookingSubmit(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
 
     const formData = new FormData(e.target);
 
@@ -332,9 +336,13 @@ async function handleBookingSubmit(e) {
             e.target.reset();
             fetchDashboardData();
         } else {
+            btn.disabled = false;
+            btn.textContent = orig;
             alert('Failed: ' + (result.error || 'Unknown error'));
         }
     } catch (err) {
+        btn.disabled = false;
+        btn.textContent = orig;
         alert('Network error: ' + err.message);
     }
 }
