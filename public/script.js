@@ -1,6 +1,20 @@
 let allBookingsCache = [];
 let allExpensesCache = [];
 let allInvestmentsCache = [];
+let allDataCache = null;
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.classList.add('toast-removing');
+        setTimeout(() => el.remove(), 200);
+    }, 3000);
+}
 
 function getToken() { return sessionStorage.getItem('veyr_token') }
 
@@ -51,7 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setupModal("openBookingModal", "bookingModal", "close-modal");
     setupModal("openBillModal", "billModal", "close-modal");
     setupModal("openFinanceModal", "financeModal", "close-modal");
-    setupModal(null, "editBookingModal", "close-modal"); // Setup edit modal closing events
+    setupModal("openConfigModal", "configModal", "close-modal");
+    setupModal(null, "editBookingModal", "close-modal");
     setupModal(null, "editExpenseModal", "close-modal");
     setupModal(null, "editInvestmentModal", "close-modal");
 
@@ -63,6 +78,25 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
     document.getElementById("editExpenseForm").addEventListener("submit", handleEditExpenseSubmit);
     document.getElementById("editInvestmentForm").addEventListener("submit", handleEditInvestmentSubmit);
+
+    document.getElementById("configForm").addEventListener("submit", handleConfigSubmit);
+
+    document.getElementById("openConfigModal").addEventListener("click", () => {
+        if (allDataCache && allDataCache.monthlyConfig) {
+            const c = allDataCache.monthlyConfig;
+            document.getElementById("configRent").value = c.rent || 0;
+            document.getElementById("configElectric").value = c.electric || 0;
+            document.getElementById("configInternet").value = c.internet || 0;
+        }
+    });
+
+    const invFilter = document.getElementById("investmentMonthFilter");
+    if (invFilter) {
+        const now = new Date();
+        invFilter.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        invFilter.addEventListener("change", () => renderFilteredInvestments());
+    }
+    document.getElementById("searchInvestmentInput")?.addEventListener("input", () => renderFilteredInvestments());
 
     document.getElementById("searchBookingInput").addEventListener("input", () => {
         renderFilteredBookings();
@@ -169,13 +203,14 @@ async function handleBillSubmit(e) {
     const result = await res.json();
 
     if (!result.success) {
-        alert(result.error || 'Failed to save bill');
+        showToast(result.error || 'Failed to save bill', 'error');
         return;
     }
 
     document.getElementById("billModal").style.display = "none";
     e.target.reset();
     fetchDashboardData();
+    showToast('Bill saved', 'success');
 }
 
 function openLightbox(src) {
@@ -203,18 +238,19 @@ async function loadCnicImage(bookingId, side) {
             cnicCache[key] = url;
             openLightbox(url);
         } else {
-            alert('No image available');
+            showToast('No image available', 'warning');
         }
     } catch {
-        alert('Failed to load image');
+        showToast('Failed to load image', 'error');
     }
 }
 
 async function fetchDashboardData() {
     try {
-        const response = await fetch('/api/data');
+        const response = await apiFetch('/api/data');
         const data = await response.json();
-        
+
+        allDataCache = data;
         // Clear cached CNIC images so fresh ones are loaded on next view
         Object.keys(cnicCache).forEach(k => delete cnicCache[k]);
         allBookingsCache = data.bookings || [];
@@ -377,25 +413,48 @@ function populateFinanceTables(data) {
     allExpensesCache = data.expenses || [];
     allInvestmentsCache = data.investments || [];
     renderFilteredExpenses();
+    renderFilteredInvestments();
+}
 
+function renderFilteredInvestments() {
+    const monthFilter = document.getElementById("investmentMonthFilter");
+    const selectedMonth = monthFilter ? monthFilter.value : '';
+    const searchInput = document.getElementById("searchInvestmentInput");
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
     const investmentTbody = document.querySelector("#investmentsTable tbody");
-    if (investmentTbody && data.investments) {
-        if (!data.investments.length) {
-            investmentTbody.innerHTML = '<tr><td colspan="5" class="empty-state">No investments found</td></tr>';
-        } else {
-            investmentTbody.innerHTML = data.investments.map(i => 
-                '<tr>' +
-                '<td>' + (i.investor_name || i.category || '-') + '</td>' +
-                '<td>' + (i.description || '-') + '</td>' +
-                '<td>' + i.amount + ' PKR</td>' +
-                '<td>' + (i.investment_date || i.date || i.created_at) + '</td>' +
-                '<td class="actions-cell">' +
-                    '<button onclick="openEditInvestmentModal(\'' + i._id + '\')" class="btn-primary btn-sm">Edit</button>' +
-                    '<button onclick="deleteInvestment(\'' + i._id + '\')" class="btn-danger btn-sm">Delete</button>' +
-                '</td>' +
-                '</tr>'
-            ).join('');
-        }
+    if (!investmentTbody) return;
+
+    let filtered = allInvestmentsCache;
+
+    if (selectedMonth) {
+        filtered = filtered.filter(i => {
+            const dateStr = i.investment_date || i.date || i.created_at || '';
+            return dateStr.startsWith(selectedMonth);
+        });
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(i =>
+            (i.investor_name && i.investor_name.toLowerCase().includes(searchTerm)) ||
+            (i.category && i.category.toLowerCase().includes(searchTerm))
+        );
+    }
+
+    if (!filtered.length) {
+        investmentTbody.innerHTML = '<tr><td colspan="5" class="empty-state">No investments found</td></tr>';
+    } else {
+        investmentTbody.innerHTML = filtered.map(i =>
+            '<tr>' +
+            '<td>' + (i.investor_name || i.category || '-') + '</td>' +
+            '<td>' + (i.description || '-') + '</td>' +
+            '<td>' + i.amount + ' PKR</td>' +
+            '<td>' + (i.investment_date || i.date || i.created_at) + '</td>' +
+            '<td class="actions-cell">' +
+                '<button onclick="openEditInvestmentModal(\'' + i._id + '\')" class="btn-primary btn-sm">Edit</button>' +
+                '<button onclick="deleteInvestment(\'' + i._id + '\')" class="btn-danger btn-sm">Delete</button>' +
+            '</td>' +
+            '</tr>'
+        ).join('');
     }
 }
 
@@ -486,12 +545,12 @@ async function handleBookingSubmit(e) {
         } else {
             btn.disabled = false;
             btn.textContent = orig;
-            alert('Failed: ' + (result.error || 'Unknown error'));
+            showToast('Failed: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (err) {
         btn.disabled = false;
         btn.textContent = orig;
-        alert('Network error: ' + err.message);
+        showToast('Network error: ' + err.message, 'error');
     }
 }
 
@@ -553,11 +612,12 @@ async function handleEditBookingSubmit(e) {
             document.getElementById("editBookingModal").style.display = "none";
             window.scrollTo({ top: 0, behavior: 'smooth' });
             fetchDashboardData();
+            showToast('Booking updated', 'success');
         } else {
-            alert("Failed to update booking.");
+            showToast("Failed to update booking.", 'error');
         }
     } catch (err) {
-        alert('Network error: ' + err.message);
+        showToast('Network error: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = orig;
@@ -573,8 +633,9 @@ async function deleteBooking(id) {
 
     if (response.ok) {
         fetchDashboardData();
+        showToast('Booking deleted', 'success');
     } else {
-        alert("Failed to delete booking.");
+        showToast("Failed to delete booking.", 'error');
     }
 }
 
@@ -587,7 +648,7 @@ async function handleExport() {
         const res = await apiFetch('/api/export');
         if (!res.ok) {
             const msg = await res.json().catch(() => ({}));
-            alert(msg.error || 'Export failed');
+            showToast(msg.error || 'Export failed', 'error');
             return;
         }
         const blob = await res.blob();
@@ -598,7 +659,7 @@ async function handleExport() {
         a.click();
         URL.revokeObjectURL(url);
     } catch (err) {
-        alert('Export failed: ' + err.message);
+        showToast('Export failed: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = orig;
@@ -621,7 +682,7 @@ async function handleFinanceSubmit(e) {
             body: JSON.stringify(payload)
         });
         const result = await res.json();
-        if (!result.success) { alert(result.error || 'Failed to save expense'); return; }
+        if (!result.success) { showToast(result.error || 'Failed to save expense', 'error'); return; }
     } else {
         const payload = {
             investor_name: document.getElementById("financeCategory").value,
@@ -634,12 +695,13 @@ async function handleFinanceSubmit(e) {
             body: JSON.stringify(payload)
         });
         const result = await res.json();
-        if (!result.success) { alert(result.error || 'Failed to save investment'); return; }
+        if (!result.success) { showToast(result.error || 'Failed to save investment', 'error'); return; }
     }
 
     document.getElementById("financeModal").style.display = "none";
     e.target.reset();
     fetchDashboardData();
+    showToast(type === 'expense' ? 'Expense saved' : 'Investment saved', 'success');
 }
 
 function openEditExpenseModal(id) {
@@ -678,10 +740,11 @@ async function handleEditExpenseSubmit(e) {
         body: JSON.stringify(payload)
     });
     const result = await res.json();
-    if (!result.success) { alert(result.error || 'Failed to update expense'); return; }
+    if (!result.success) { showToast(result.error || 'Failed to update expense', 'error'); return; }
 
     document.getElementById("editExpenseModal").style.display = "none";
     fetchDashboardData();
+    showToast('Expense updated', 'success');
 }
 
 async function deleteExpense(id) {
@@ -691,9 +754,10 @@ async function deleteExpense(id) {
         method: 'DELETE'
     });
     const result = await res.json();
-    if (!result.success) { alert(result.error || 'Failed to delete expense'); return; }
+    if (!result.success) { showToast(result.error || 'Failed to delete expense', 'error'); return; }
 
     fetchDashboardData();
+    showToast('Expense deleted', 'success');
 }
 
 function openEditInvestmentModal(id) {
@@ -723,10 +787,11 @@ async function handleEditInvestmentSubmit(e) {
         body: JSON.stringify(payload)
     });
     const result = await res.json();
-    if (!result.success) { alert(result.error || 'Failed to update investment'); return; }
+    if (!result.success) { showToast(result.error || 'Failed to update investment', 'error'); return; }
 
     document.getElementById("editInvestmentModal").style.display = "none";
     fetchDashboardData();
+    showToast('Investment updated', 'success');
 }
 
 async function deleteInvestment(id) {
@@ -736,7 +801,40 @@ async function deleteInvestment(id) {
         method: 'DELETE'
     });
     const result = await res.json();
-    if (!result.success) { alert(result.error || 'Failed to delete investment'); return; }
+    if (!result.success) { showToast(result.error || 'Failed to delete investment', 'error'); return; }
 
     fetchDashboardData();
+    showToast('Investment deleted', 'success');
+}
+
+async function handleConfigSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const payload = {
+        rent: Number(document.getElementById("configRent").value) || 0,
+        electric: Number(document.getElementById("configElectric").value) || 0,
+        internet: Number(document.getElementById("configInternet").value) || 0
+    };
+
+    const res = await apiFetch('/api/config/monthly', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.success) {
+        if (allDataCache) allDataCache.monthlyConfig = payload;
+        document.getElementById("configModal").style.display = "none";
+        showToast('Settings saved', 'success');
+        fetchDashboardData();
+    } else {
+        showToast(result.error || 'Failed to save settings', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = orig;
 }

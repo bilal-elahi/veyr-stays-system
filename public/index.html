@@ -31,6 +31,7 @@
             <button id="openBillModal" class="btn-secondary btn-dark">+ Add Bill</button>
             <button id="openFinanceModal" class="btn-secondary">+ Expense / Investment</button>
             <button id="exportBtn" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Download</button>
+            <button id="openConfigModal" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Settings</button>
         </div>
 
         <div class="main-content">
@@ -164,7 +165,16 @@
             </div>
 
             <div class="card-section">
-                <h2>Investments Log</h2>
+                <div class="section-header">
+                    <h2>Investments Log</h2>
+                    <div class="filter-group">
+                        <label class="filter-label" for="investmentMonthFilter">Month</label>
+                        <input type="month" id="investmentMonthFilter" class="filter-input">
+                    </div>
+                    <div class="search-wrap">
+                        <input type="text" id="searchInvestmentInput" class="search-input" placeholder="Search investor...">
+                    </div>
+                </div>
                 <div class="table-wrap">
                     <table class="data-table" id="investmentsTable">
                         <thead>
@@ -352,6 +362,23 @@
             </form>
         </div>
     </div>
+
+    <!-- Settings / Monthly Config Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="configModal">&times;</span>
+            <h2>Monthly Auto-Bill Settings</h2>
+            <form id="configForm">
+                <p style="margin-bottom:12px;color:var(--gray-500);font-size:13px">These amounts are used to auto-create bills on the 1st of each month.</p>
+                <div class="form-group"><label>Rent (PKR)</label><input type="number" id="configRent" required></div>
+                <div class="form-group"><label>Electric Bill (PKR)</label><input type="number" id="configElectric" required></div>
+                <div class="form-group"><label>Internet Bill (PKR)</label><input type="number" id="configInternet" required></div>
+                <button type="submit" class="btn-primary btn-full">Save Settings</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
 
     <script src="script.js"></script>
 </body>

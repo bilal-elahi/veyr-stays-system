@@ -107,7 +107,7 @@ app.post('/api/login', (req, res) => {
     res.json({ success: false, error: 'Invalid credentials' });
 });
 
-app.get('/api/data', async (req, res) => {
+app.get('/api/data', authMiddleware, async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             return res.json({ bookings: [], expenses: [], investments: [], monthlyConfig: { rent: 0, electric: 0, internet: 0 } });
@@ -315,7 +315,7 @@ app.delete('/api/investments/:id', authMiddleware, async (req, res) => {
     }
 });
 
-app.get('/api/export', async (req, res) => {
+app.get('/api/export', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.status(503).json({ error: 'Database not connected' });
 
