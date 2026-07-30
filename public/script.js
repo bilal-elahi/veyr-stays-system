@@ -163,8 +163,9 @@ function renderBookingsTable(bookings) {
         const frontImg = b.cnic_front || b.idCardFront;
         const backImg = b.cnic_back || b.idCardBack;
         
-        const frontLink = frontImg ? '<a href="' + (frontImg.startsWith('http') || frontImg.startsWith('data') ? frontImg : '/secure_uploads/' + encodeURIComponent(frontImg)) + '" target="_blank">View Front</a>' : 'N/A';
-        const backLink = backImg ? '<a href="' + (backImg.startsWith('http') || backImg.startsWith('data') ? backImg : '/secure_uploads/' + encodeURIComponent(backImg)) + '" target="_blank">View Back</a>' : 'N/A';
+        const imgSrc = (f) => f.startsWith('http') || f.startsWith('data') ? f : '/secure_uploads/' + encodeURIComponent(f);
+        const frontLink = frontImg ? '<a href="' + imgSrc(frontImg) + '" target="_blank"><img src="' + imgSrc(frontImg) + '" class="cnic-thumb" alt="Front"></a>' : 'N/A';
+        const backLink = backImg ? '<a href="' + imgSrc(backImg) + '" target="_blank"><img src="' + imgSrc(backImg) + '" class="cnic-thumb" alt="Back"></a>' : 'N/A';
 
         return '<tr>' +
             '<td>' + name + '</td>' +

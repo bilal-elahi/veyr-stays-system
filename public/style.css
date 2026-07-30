@@ -851,3 +851,19 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--gray-400);
 }
+
+.cnic-thumb {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--gray-300);
+    transition: transform 0.15s;
+}
+.cnic-thumb:hover {
+    transform: scale(2);
+    z-index: 10;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
