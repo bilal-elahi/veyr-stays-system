@@ -488,6 +488,16 @@ body {
     -webkit-backdrop-filter: blur(4px);
 }
 
+#loginOverlay {
+    align-items: center;
+    padding: 1.5rem;
+}
+#loginOverlay .modal-content {
+    max-width: 360px;
+    border-radius: var(--radius);
+    animation: none;
+}
+
 .modal-content {
     background: #fff;
     padding: 28px 20px 24px;
