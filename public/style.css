@@ -61,7 +61,7 @@ body {
 .app-header {
     display: flex;
     align-items: center;
-    height: 160px;
+    height: 130px;
     padding: 0 24px;
     background: linear-gradient(135deg, var(--header-bg), #1e4d8c);
     position: sticky;
@@ -75,14 +75,14 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 18px;
+    gap: 16px;
     width: 100%;
     height: 100%;
 }
 
 .app-logo {
-    width: 140px;
-    height: 140px;
+    width: 100px;
+    height: 100px;
     display: block;
     object-fit: contain;
     flex-shrink: 0;
@@ -105,7 +105,7 @@ body {
     background: var(--header-bg);
     flex-wrap: wrap;
     position: sticky;
-    top: 160px;
+    top: 130px;
     z-index: 99;
     box-shadow: 0 2px 12px rgba(30, 58, 95, 0.15);
 }
@@ -731,12 +731,12 @@ body {
     }
 
     .app-header {
-        height: 160px;
+        height: 130px;
         padding: 0 20px;
     }
 
     .action-bar {
-        top: 160px;
+        top: 130px;
         padding: 10px 20px;
     }
 
@@ -751,13 +751,8 @@ body {
 
 @media (min-width: 768px) {
     .app-header {
-        height: 200px;
+        height: 130px;
         padding: 0 28px;
-    }
-
-    .app-logo {
-        width: 160px;
-        height: 160px;
     }
 
     .app-brand-text {
@@ -765,7 +760,7 @@ body {
     }
 
     .action-bar {
-        top: 200px;
+        top: 130px;
         padding: 10px 28px;
         gap: 10px;
     }
@@ -835,13 +830,8 @@ body {
 
 @media (min-width: 1024px) {
     .app-header {
-        height: 220px;
+        height: 130px;
         padding: 0 32px;
-    }
-
-    .app-logo {
-        width: 180px;
-        height: 180px;
     }
 
     .app-brand-text {
@@ -849,7 +839,7 @@ body {
     }
 
     .action-bar {
-        top: 220px;
+        top: 130px;
         padding: 12px 32px;
     }
 
