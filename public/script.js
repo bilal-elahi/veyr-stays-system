@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.success) {
             sessionStorage.setItem('veyr_token', data.token);
             document.getElementById('loginOverlay').style.display = 'none';
+            window.scrollTo(0, 0);
             fetchDashboardData();
         } else {
             errEl.textContent = data.error || 'Invalid credentials';
@@ -217,6 +218,7 @@ async function fetchDashboardData() {
     } catch (error) {
         console.error("Error fetching dashboard data:", error);
     }
+    window.scrollTo(0, 0);
 }
 function renderBookingsTable(bookings) {
     const bookingTbody = document.querySelector("#bookingsTable tbody");
