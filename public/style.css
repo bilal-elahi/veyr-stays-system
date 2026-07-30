@@ -61,8 +61,8 @@ body {
 .app-header {
     display: flex;
     align-items: center;
-    height: 130px;
-    padding: 0 24px;
+    height: 100px;
+    padding: 0 16px;
     background: linear-gradient(135deg, var(--header-bg), #1e4d8c);
     position: sticky;
     top: 0;
@@ -75,7 +75,7 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
     width: 100%;
     height: 100%;
 }
@@ -89,7 +89,7 @@ body {
 }
 
 .app-brand-text {
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     font-weight: 800;
     color: #fff;
     letter-spacing: 0.08em;
@@ -100,12 +100,12 @@ body {
 
 .action-bar {
     display: flex;
-    gap: 8px;
-    padding: 10px 16px;
+    gap: 6px;
+    padding: 6px 12px;
     background: var(--header-bg);
     flex-wrap: wrap;
     position: sticky;
-    top: 130px;
+    top: 100px;
     z-index: 99;
     box-shadow: 0 2px 12px rgba(30, 58, 95, 0.15);
 }
@@ -156,19 +156,19 @@ body {
 }
 
 .main-content {
-    padding: 16px 12px;
+    padding: 10px 10px;
 }
 
 .metrics-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .metric-card {
     background: #fff;
-    padding: 16px 18px;
+    padding: 10px 12px;
     border-radius: var(--radius);
     border: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
@@ -180,8 +180,8 @@ body {
 }
 
 .metric-card h3 {
-    margin: 0 0 6px 0;
-    font-size: 0.65rem;
+    margin: 0 0 4px 0;
+    font-size: 0.6rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -190,7 +190,7 @@ body {
 
 .metric-card p {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 800;
     color: var(--gray-900);
     word-break: break-word;
@@ -224,10 +224,10 @@ body {
 
 .card-section {
     background: #fff;
-    padding: 16px;
+    padding: 12px;
     border-radius: var(--radius);
     border: 1px solid var(--gray-200);
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
     border-top: 3px solid var(--primary-light);
@@ -235,8 +235,8 @@ body {
 
 .card-section h2 {
     margin-top: 0;
-    margin-bottom: 14px;
-    font-size: 0.9rem;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--primary-dark);
     letter-spacing: -0.01em;
@@ -386,20 +386,20 @@ body {
 }
 
 .btn-primary, .btn-secondary, .btn-danger {
-    padding: 10px 16px;
+    padding: 7px 14px;
     border: none;
     border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     white-space: nowrap;
-    line-height: 1.4;
-    min-height: 40px;
+    line-height: 1.3;
+    min-height: 34px;
     -webkit-tap-highlight-color: transparent;
     text-decoration: none;
 }
@@ -709,13 +709,42 @@ body {
 }
 
 @media (min-width: 480px) {
+    .app-header {
+        height: 100px;
+        padding: 0 20px;
+    }
+
+    .app-brand-text {
+        font-size: 1.4rem;
+    }
+
+    .action-bar {
+        top: 100px;
+        padding: 8px 20px;
+        gap: 8px;
+    }
+
+    .btn-primary, .btn-secondary, .btn-danger {
+        padding: 8px 16px;
+        font-size: 0.8125rem;
+        min-height: 36px;
+    }
+
     .main-content {
-        padding: 20px 16px;
+        padding: 14px 14px;
     }
 
     .metrics-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .metric-card {
+        padding: 12px 14px;
+    }
+
+    .metric-card p {
+        font-size: 1.1rem;
     }
 
     .modal {
@@ -730,16 +759,6 @@ body {
         padding: 28px 28px 24px;
     }
 
-    .app-header {
-        height: 130px;
-        padding: 0 20px;
-    }
-
-    .action-bar {
-        top: 130px;
-        padding: 10px 20px;
-    }
-
     .expense-summary-item {
         padding: 10px 14px;
     }
@@ -751,16 +770,16 @@ body {
 
 @media (min-width: 768px) {
     .app-header {
-        height: 130px;
+        height: 100px;
         padding: 0 28px;
     }
 
     .app-brand-text {
-        font-size: 2rem;
+        font-size: 1.6rem;
     }
 
     .action-bar {
-        top: 130px;
+        top: 100px;
         padding: 10px 28px;
         gap: 10px;
     }
@@ -770,8 +789,14 @@ body {
         font-size: 0.8125rem;
     }
 
+    .btn-primary, .btn-secondary, .btn-danger {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+        min-height: 40px;
+    }
+
     .main-content {
-        padding: 24px 28px;
+        padding: 20px 28px;
     }
 
     .metrics-grid {
@@ -781,11 +806,11 @@ body {
     }
 
     .metric-card {
-        padding: 20px 24px;
+        padding: 18px 22px;
     }
 
     .metric-card p {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
 
     .card-section {
@@ -795,6 +820,7 @@ body {
 
     .card-section h2 {
         font-size: 0.95rem;
+        margin-bottom: 14px;
     }
 
     .financial-split-grid {
@@ -830,16 +856,16 @@ body {
 
 @media (min-width: 1024px) {
     .app-header {
-        height: 130px;
+        height: 100px;
         padding: 0 32px;
     }
 
     .app-brand-text {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
     }
 
     .action-bar {
-        top: 130px;
+        top: 100px;
         padding: 12px 32px;
     }
 
