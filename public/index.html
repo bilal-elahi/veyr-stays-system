@@ -40,6 +40,10 @@
                 <h3>Total Revenue</h3>
                 <p id="totalRevenue">0 PKR</p>
             </div>
+            <div class="metric-card accent-warning">
+                <h3>Pending Revenue</h3>
+                <p id="pendingRevenue">0 PKR</p>
+            </div>
             <div class="metric-card">
                 <h3>Total Expenses (Incl. Auto Bills)</h3>
                 <p id="totalExpenses">0 PKR</p>
@@ -73,6 +77,7 @@
                             <th>Check-Out</th>
                             <th>Booking Type</th>
                             <th>Amount</th>
+                            <th>Status</th>
                             <th>Reference</th>
                             <th>ID Front</th>
                             <th>ID Back</th>
@@ -176,8 +181,9 @@
                         <option value="Night">Night</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Amount (PKR)</label><input type="number" id="bookingAmount" required></div>
-                <div class="form-group"><label>Booking Reference / Source</label><input type="text" id="bookingReference" placeholder="e.g., Walk-in, Booking.com, Phone"></div>
+            <div class="form-group"><label>Amount (PKR)</label><input type="number" id="bookingAmount" required></div>
+            <div class="form-group"><label>Payment Status</label><select id="bookingPaymentStatus" required><option value="Paid">Paid</option><option value="Pending">Pending</option></select></div>
+            <div class="form-group"><label>Booking Reference / Source</label><input type="text" id="bookingReference" placeholder="e.g., Walk-in, Booking.com, Phone"></div>
                 <div class="form-group"><label>Upload ID Card Front Image</label><input type="file" id="idCardFrontFile" accept="image/*"></div>
                 <div class="form-group"><label>Upload ID Card Back Image</label><input type="file" id="idCardBackFile" accept="image/*"></div>
                 <button type="submit" class="btn-primary">Save Booking</button>
@@ -223,6 +229,13 @@
                 <div class="form-group">
                     <label for="editBookingAmount">Payment Amount (PKR)</label>
                     <input type="number" id="editBookingAmount" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBookingPaymentStatus">Payment Status</label>
+                    <select id="editBookingPaymentStatus">
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="editBookingReference">Reference / Source</label>

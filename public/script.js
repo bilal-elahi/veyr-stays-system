@@ -52,6 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setupModal("openBillModal", "billModal", "close-modal");
     setupModal("openFinanceModal", "financeModal", "close-modal");
     setupModal(null, "editBookingModal", "close-modal"); // Setup edit modal closing events
+    setupModal(null, "editExpenseModal", "close-modal");
+    setupModal(null, "editInvestmentModal", "close-modal");
 
     document.getElementById("exportBtn").addEventListener("click", handleExport);
 
@@ -225,7 +227,7 @@ function renderBookingsTable(bookings) {
     if (!bookingTbody) return;
 
     if (!bookings || bookings.length === 0) {
-        bookingTbody.innerHTML = '<tr><td colspan="11" class="empty-state">No bookings found</td></tr>';
+        bookingTbody.innerHTML = '<tr><td colspan="12" class="empty-state">No bookings found</td></tr>';
         return;
     }
 
@@ -237,6 +239,7 @@ function renderBookingsTable(bookings) {
         const checkOut = b.checkOutDate || '';
         const type = b.bookingType || 'Full Day';
         const amount = b.payment_amount !== undefined && b.payment_amount !== null ? b.payment_amount : (b.amount || 0);
+        const status = b.payment_status || 'Paid';
         const ref = b.reference_name || b.bookingReference || 'N/A';
         const frontLink = '<button class="btn-secondary btn-sm" onclick="loadCnicImage(\'' + b.id + '\',\'front\')">Front</button>';
         const backLink = '<button class="btn-secondary btn-sm" onclick="loadCnicImage(\'' + b.id + '\',\'back\')">Back</button>';
@@ -249,6 +252,7 @@ function renderBookingsTable(bookings) {
             '<td>' + checkOut.replace('T', ' ') + '</td>' +
             '<td><span class="badge ' + (type === 'Short Booking' ? 'badge-short-booking' : type === 'Night' ? 'badge-night' : 'badge-full-day') + '">' + type + '</span></td>' +
             '<td>' + Number(amount).toLocaleString() + ' PKR</td>' +
+            '<td><span class="badge ' + (status === 'Pending' ? 'badge-pending' : 'badge-paid') + '">' + status + '</span></td>' +
             '<td>' + ref + '</td>' +
             '<td>' + frontLink + '</td>' +
             '<td>' + backLink + '</td>' +
@@ -352,12 +356,21 @@ function populateFinanceTables(data) {
 }
 
 function calculateMetrics(data) {
-    const totalRev = (data.bookings || []).reduce((sum, item) => sum + Number(item.payment_amount !== undefined ? item.payment_amount : (item.amount || 0)), 0);
+    const bookings = data.bookings || [];
+    const totalRev = bookings.reduce((sum, item) => {
+        const amt = Number(item.payment_amount !== undefined ? item.payment_amount : (item.amount || 0));
+        return sum + ((item.payment_status || 'Paid') === 'Paid' ? amt : 0);
+    }, 0);
+    const pendingRev = bookings.reduce((sum, item) => {
+        const amt = Number(item.payment_amount !== undefined ? item.payment_amount : (item.amount || 0));
+        return sum + ((item.payment_status || 'Paid') === 'Pending' ? amt : 0);
+    }, 0);
     const totalExp = (data.expenses || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const totalInv = (data.investments || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const netProf = totalRev - totalExp;
 
     document.getElementById("totalRevenue").innerText = totalRev.toLocaleString() + " PKR";
+    document.getElementById("pendingRevenue").innerText = pendingRev.toLocaleString() + " PKR";
     document.getElementById("totalExpenses").innerText = totalExp.toLocaleString() + " PKR";
     document.getElementById("totalInvestments").innerText = totalInv.toLocaleString() + " PKR";
     document.getElementById("netProfit").innerText = netProf.toLocaleString() + " PKR";
@@ -408,6 +421,7 @@ async function handleBookingSubmit(e) {
         checkOutDate: document.getElementById("checkOutDate").value,
         bookingType: document.getElementById("bookingType").value,
         payment_amount: Number(document.getElementById("bookingAmount").value),
+        payment_status: document.getElementById("bookingPaymentStatus").value,
         reference_name: document.getElementById("bookingReference").value,
         cnic_front, cnic_back
     };
@@ -448,6 +462,7 @@ function openEditBookingModal(id) {
     document.getElementById("editCheckOutDate").value = booking.checkOutDate || '';
     document.getElementById("editBookingType").value = booking.bookingType || 'Full Day';
     document.getElementById("editBookingAmount").value = booking.payment_amount !== undefined ? booking.payment_amount : (booking.amount || 0);
+    document.getElementById("editBookingPaymentStatus").value = booking.payment_status || 'Paid';
     document.getElementById("editBookingReference").value = booking.reference_name || booking.bookingReference || '';
     document.getElementById("editCardFrontFile").value = '';
     document.getElementById("editCardBackFile").value = '';
@@ -478,6 +493,7 @@ async function handleEditBookingSubmit(e) {
         checkOutDate: document.getElementById("editCheckOutDate").value,
         bookingType: document.getElementById("editBookingType").value,
         payment_amount: Number(document.getElementById("editBookingAmount").value),
+        payment_status: document.getElementById("editBookingPaymentStatus").value,
         reference_name: document.getElementById("editBookingReference").value,
         cnic_front, cnic_back
     };

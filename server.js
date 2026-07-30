@@ -53,6 +53,7 @@ const bookingSchema = new mongoose.Schema({
     checkOutDate: String,
     bookingType: String,
     payment_amount: Number,
+    payment_status: { type: String, default: 'Paid' },
     cnic_front: String,
     cnic_back: String,
     created_at: String
@@ -168,7 +169,7 @@ async function uploadImage(base64Str) {
 app.post('/api/bookings', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ success: false, error: 'Database not connected' });
-        const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, cnic_front, cnic_back } = req.body;
+        const { guest_name, reference_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, payment_status, cnic_front, cnic_back } = req.body;
         const created_at = new Date().toISOString().split('T')[0];
 
         const [cnicFrontUrl, cnicBackUrl] = await Promise.all([
@@ -180,6 +181,7 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
             guest_name, reference_name, reference_contact, roomNumber,
             check_in_date: check_in, checkOutDate, bookingType,
             payment_amount: Number(payment_amount) || 0,
+            payment_status: payment_status || 'Paid',
             cnic_front: cnicFrontUrl || '', cnic_back: cnicBackUrl || '', created_at
         });
 
@@ -228,9 +230,9 @@ app.get('/api/bookings/:id/images', authMiddleware, async (req, res) => {
 app.put('/api/bookings/:id', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ error: 'Database not connected' });
-        const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name, cnic_front, cnic_back } = req.body;
+        const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, payment_status, reference_name, cnic_front, cnic_back } = req.body;
 
-        const update = { guest_name, reference_contact, roomNumber, check_in_date: check_in, checkOutDate, bookingType, payment_amount, reference_name };
+        const update = { guest_name, reference_contact, roomNumber, check_in_date: check_in, checkOutDate, bookingType, payment_amount, payment_status, reference_name };
         if (cnic_front) update.cnic_front = await uploadImage(cnic_front);
         if (cnic_back) update.cnic_back = await uploadImage(cnic_back);
 
