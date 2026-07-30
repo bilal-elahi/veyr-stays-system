@@ -64,19 +64,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("editExpenseForm").addEventListener("submit", handleEditExpenseSubmit);
     document.getElementById("editInvestmentForm").addEventListener("submit", handleEditInvestmentSubmit);
 
-    document.getElementById("searchBookingInput").addEventListener("input", (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        const filtered = allBookingsCache.filter(b => 
-            (b.guest_name && b.guest_name.toLowerCase().includes(searchTerm)) ||
-            (b.guestName && b.guestName.toLowerCase().includes(searchTerm))
-        );
-        renderBookingsTable(filtered);
+    document.getElementById("searchBookingInput").addEventListener("input", () => {
+        renderFilteredBookings();
     });
 
-    const monthInput = document.getElementById("expenseMonthFilter");
+    const monthFilter = document.getElementById("bookingMonthFilter");
+    if (monthFilter) {
+        const now = new Date();
+        monthFilter.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        monthFilter.addEventListener("change", () => {
+            renderFilteredBookings();
+        });
+    }
+
+    const expenseMonthInput = document.getElementById("expenseMonthFilter");
     const now = new Date();
-    monthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    monthInput.addEventListener("change", () => {
+    expenseMonthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    expenseMonthInput.addEventListener("change", () => {
         renderFilteredExpenses();
     });
 });
@@ -214,7 +218,7 @@ async function fetchDashboardData() {
         // Clear cached CNIC images so fresh ones are loaded on next view
         Object.keys(cnicCache).forEach(k => delete cnicCache[k]);
         allBookingsCache = data.bookings || [];
-        renderBookingsTable(allBookingsCache);
+        renderFilteredBookings();
         populateFinanceTables(data);
         calculateMetrics(data);
     } catch (error) {
@@ -222,6 +226,45 @@ async function fetchDashboardData() {
     }
     window.scrollTo(0, 0);
 }
+
+function renderFilteredBookings() {
+    const monthInput = document.getElementById("bookingMonthFilter");
+    const selectedMonth = monthInput ? monthInput.value : '';
+    const searchInput = document.getElementById("searchBookingInput");
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let filtered = allBookingsCache;
+
+    if (selectedMonth) {
+        filtered = filtered.filter(b => {
+            const dateStr = b.check_in_date || b.checkInDate || b.created_at || '';
+            return dateStr.startsWith(selectedMonth);
+        });
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(b =>
+            (b.guest_name && b.guest_name.toLowerCase().includes(searchTerm)) ||
+            (b.guestName && b.guestName.toLowerCase().includes(searchTerm))
+        );
+    }
+
+    renderBookingsTable(filtered);
+
+    const totalRev = filtered.reduce((sum, b) => {
+        const amt = Number(b.payment_amount !== undefined ? b.payment_amount : (b.amount || 0));
+        return sum + ((b.payment_status || 'Paid') === 'Paid' ? amt : 0);
+    }, 0);
+    const pendingRev = filtered.reduce((sum, b) => {
+        const amt = Number(b.payment_amount !== undefined ? b.payment_amount : (b.amount || 0));
+        return sum + ((b.payment_status || 'Paid') === 'Pending' ? amt : 0);
+    }, 0);
+
+    document.getElementById("monthBookingCount").innerText = filtered.length;
+    document.getElementById("monthBookingRevenue").innerText = totalRev.toLocaleString() + ' PKR';
+    document.getElementById("monthBookingPending").innerText = pendingRev.toLocaleString() + ' PKR';
+}
+
 function renderBookingsTable(bookings) {
     const bookingTbody = document.querySelector("#bookingsTable tbody");
     if (!bookingTbody) return;

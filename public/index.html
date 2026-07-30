@@ -66,8 +66,26 @@
         <section class="card-section">
             <div class="section-header">
                 <h2>Bookings Management</h2>
+                <div class="filter-group">
+                    <label class="filter-label" for="bookingMonthFilter">Month</label>
+                    <input type="month" id="bookingMonthFilter" class="filter-input">
+                </div>
                 <div class="search-wrap">
                     <input type="text" id="searchBookingInput" class="search-input" placeholder="Search booking by guest name...">
+                </div>
+            </div>
+            <div class="expense-summary" id="bookingMonthlySummary" style="margin-bottom:10px">
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Bookings</span>
+                    <span class="expense-summary-value" id="monthBookingCount">0</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Revenue</span>
+                    <span class="expense-summary-value" id="monthBookingRevenue">0 PKR</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Pending</span>
+                    <span class="expense-summary-value" id="monthBookingPending">0 PKR</span>
                 </div>
             </div>
             <div class="table-wrap">
