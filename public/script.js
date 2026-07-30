@@ -375,13 +375,26 @@ function openEditBookingModal(id) {
     document.getElementById("editBookingType").value = booking.bookingType || 'Full Day';
     document.getElementById("editBookingAmount").value = booking.payment_amount !== undefined ? booking.payment_amount : (booking.amount || 0);
     document.getElementById("editBookingReference").value = booking.reference_name || booking.bookingReference || '';
+    document.getElementById("editCardFrontFile").value = '';
+    document.getElementById("editCardBackFile").value = '';
 
     document.getElementById("editBookingModal").style.display = "flex";
 }
 
 async function handleEditBookingSubmit(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+
     const id = document.getElementById("editBookingId").value;
+    const frontInput = document.getElementById("editCardFrontFile");
+    const backInput = document.getElementById("editCardBackFile");
+
+    let cnic_front = '', cnic_back = '';
+    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 1200);
+    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 1200);
 
     const payload = {
         guest_name: document.getElementById("editGuestName").value,
@@ -391,20 +404,28 @@ async function handleEditBookingSubmit(e) {
         checkOutDate: document.getElementById("editCheckOutDate").value,
         bookingType: document.getElementById("editBookingType").value,
         payment_amount: Number(document.getElementById("editBookingAmount").value),
-        reference_name: document.getElementById("editBookingReference").value
+        reference_name: document.getElementById("editBookingReference").value,
+        cnic_front, cnic_back
     };
 
-    const response = await fetch(`/api/bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const response = await fetch(`/api/bookings/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (response.ok) {
-        document.getElementById("editBookingModal").style.display = "none";
-        fetchDashboardData();
-    } else {
-        alert("Failed to update booking.");
+        if (response.ok) {
+            document.getElementById("editBookingModal").style.display = "none";
+            fetchDashboardData();
+        } else {
+            alert("Failed to update booking.");
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
     }
 }
 

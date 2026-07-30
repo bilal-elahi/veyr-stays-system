@@ -177,11 +177,13 @@ app.delete('/api/bookings/:id', async (req, res) => {
 app.put('/api/bookings/:id', async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ error: 'Database not connected' });
-        const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name } = req.body;
-        const result = await Booking.updateOne(
-            { _id: req.params.id },
-            { guest_name, reference_contact, roomNumber, check_in_date: check_in, checkOutDate, bookingType, payment_amount, reference_name }
-        );
+        const { guest_name, reference_contact, roomNumber, check_in, checkOutDate, bookingType, payment_amount, reference_name, cnic_front, cnic_back } = req.body;
+
+        const update = { guest_name, reference_contact, roomNumber, check_in_date: check_in, checkOutDate, bookingType, payment_amount, reference_name };
+        if (cnic_front) update.cnic_front = await uploadImage(cnic_front);
+        if (cnic_back) update.cnic_back = await uploadImage(cnic_back);
+
+        const result = await Booking.updateOne({ _id: req.params.id }, update);
         res.json({ message: 'Booking updated successfully', changes: result.modifiedCount });
     } catch (err) {
         res.json({ error: err.message });
