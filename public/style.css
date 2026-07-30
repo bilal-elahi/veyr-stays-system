@@ -85,6 +85,12 @@ body {
     gap: 10px;
 }
 
+.app-logo {
+    height: 36px;
+    width: auto;
+    display: block;
+}
+
 .app-header h1::before {
     content: '';
     width: 8px;
