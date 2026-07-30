@@ -212,7 +212,7 @@ app.get('/api/export', async (req, res) => {
 
         const tmpFile = path.join(os.tmpdir(), 'veyr_export_' + Date.now() + '.zip');
         const output = fs.createWriteStream(tmpFile);
-        const archive = archiver('zip', { zlib: { level: 9 } });
+        const archive = new archiver.ZipArchive({ zlib: { level: 9 } });
 
         const done = new Promise((resolve, reject) => {
             output.on('close', resolve);
