@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setupModal("openFinanceModal", "financeModal", "close-modal");
     setupModal(null, "editBookingModal", "close-modal"); // Setup edit modal closing events
 
+    document.getElementById("exportBtn").addEventListener("click", handleExport);
+
     document.getElementById("bookingForm").addEventListener("submit", handleBookingSubmit);
     document.getElementById("editBookingForm").addEventListener("submit", handleEditBookingSubmit);
     document.getElementById("billForm").addEventListener("submit", handleBillSubmit);
@@ -395,6 +397,13 @@ async function deleteBooking(id) {
     } else {
         alert("Failed to delete booking.");
     }
+}
+
+function handleExport() {
+    const a = document.createElement('a');
+    a.href = '/api/export';
+    a.download = 'veyr_stays_export.zip';
+    a.click();
 }
 
 async function handleFinanceSubmit(e) {

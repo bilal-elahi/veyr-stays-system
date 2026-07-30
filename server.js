@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
+const archiver = require('archiver');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -194,6 +195,50 @@ app.post('/api/investments', async (req, res) => {
         res.json({ success: true, id: investment._id });
     } catch (err) {
         res.json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/export', async (req, res) => {
+    try {
+        if (!isDbConnected()) return res.json({ error: 'Database not connected' });
+
+        const [bookings, expenses, investments, monthlyConfig] = await Promise.all([
+            Booking.find().sort({ _id: -1 }).lean(),
+            Expense.find().sort({ _id: -1 }).lean(),
+            Investment.find().sort({ _id: -1 }).lean(),
+            MonthlyConfig.findOne().sort({ _id: -1 }).lean()
+        ]);
+
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename=veyr_stays_export.zip');
+
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        archive.pipe(res);
+
+        const data = {
+            exported_at: new Date().toISOString(),
+            bookings: bookings.map(b => ({ ...b, id: b._id })),
+            expenses: expenses.map(e => ({ ...e, id: e._id })),
+            investments: investments.map(i => ({ ...i, id: i._id })),
+            monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 }
+        };
+        archive.append(JSON.stringify(data, null, 2), { name: 'data.json' });
+
+        const uploadsDir = path.join(__dirname, 'secure_uploads');
+        if (fs.existsSync(uploadsDir)) {
+            const files = fs.readdirSync(uploadsDir);
+            for (const file of files) {
+                const filePath = path.join(uploadsDir, file);
+                const stat = fs.statSync(filePath);
+                if (stat.isFile()) {
+                    archive.file(filePath, { name: 'cnic_images/' + file });
+                }
+            }
+        }
+
+        await archive.finalize();
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
