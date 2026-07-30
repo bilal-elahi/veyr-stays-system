@@ -60,9 +60,8 @@ body {
 
 .app-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
     height: 100px;
     padding: 0 16px;
     background: linear-gradient(135deg, var(--header-bg), #1e4d8c);
@@ -76,63 +75,80 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1px;
-    flex-shrink: 0;
+    gap: 4px;
 }
 
 .app-logo {
-    height: 52px;
+    height: 58px;
     width: auto;
     display: block;
 }
 
 .app-brand-text {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: #fff;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    opacity: 0.9;
+    opacity: 0.95;
     white-space: nowrap;
 }
 
-.header-actions {
+.action-bar {
     display: flex;
-    gap: 6px;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--header-bg);
     flex-wrap: wrap;
-    justify-content: flex-end;
+    position: sticky;
+    top: 100px;
+    z-index: 99;
+    box-shadow: 0 2px 12px rgba(30, 58, 95, 0.15);
 }
 
-.header-actions .btn-dark {
+.action-bar .btn-primary {
+    background: #fff;
+    color: var(--primary-dark);
+    border: none;
+}
+
+.action-bar .btn-primary:hover {
+    background: var(--gray-100);
+}
+
+.action-bar .btn-primary:active {
+    background: var(--gray-200);
+    transform: scale(0.97);
+}
+
+.action-bar .btn-secondary {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.action-bar .btn-secondary:hover {
+    background: rgba(255,255,255,0.22);
+}
+
+.action-bar .btn-secondary:active {
+    background: rgba(255,255,255,0.08);
+    transform: scale(0.97);
+}
+
+.action-bar .btn-dark {
     background: rgba(255, 255, 255, 0.15);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(4px);
 }
 
-.header-actions .btn-dark:hover {
+.action-bar .btn-dark:hover {
     background: rgba(255, 255, 255, 0.25);
-    box-shadow: none;
 }
 
-.header-actions .btn-dark:active {
+.action-bar .btn-dark:active {
     background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.97);
-}
-
-.header-actions .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.header-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.header-actions .btn-secondary:active {
-    background: rgba(255, 255, 255, 0.05);
 }
 
 .main-content {
@@ -714,13 +730,12 @@ body {
         padding: 0 20px;
     }
 
-    .header-actions {
-        flex: none;
+    .action-bar {
+        padding: 10px 20px;
     }
 
-    .header-actions button {
-        flex: none;
-        padding: 8px 16px;
+    .app-logo {
+        height: 64px;
     }
 
     .expense-summary-item {
@@ -738,11 +753,21 @@ body {
     }
 
     .app-logo {
-        height: 60px;
+        height: 72px;
     }
 
     .app-brand-text {
-        font-size: 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .action-bar {
+        padding: 10px 28px;
+        gap: 10px;
+    }
+
+    .action-bar button {
+        padding: 9px 18px;
+        font-size: 0.8125rem;
     }
 
     .main-content {
@@ -785,15 +810,6 @@ body {
         width: 260px;
     }
 
-    .header-actions {
-        flex: none;
-    }
-
-    .header-actions button {
-        padding: 9px 18px;
-        font-size: 0.8125rem;
-    }
-
     .data-table {
         font-size: 0.8125rem;
     }
@@ -815,6 +831,18 @@ body {
 @media (min-width: 1024px) {
     .app-header {
         padding: 0 32px;
+    }
+
+    .app-logo {
+        height: 80px;
+    }
+
+    .app-brand-text {
+        font-size: 0.9rem;
+    }
+
+    .action-bar {
+        padding: 12px 32px;
     }
 
     .main-content {
