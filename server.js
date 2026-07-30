@@ -16,8 +16,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use('/secure_uploads', express.static(path.join(__dirname, 'secure_uploads')));
 
-if (!fs.existsSync('./secure_uploads')) {
-    fs.mkdirSync('./secure_uploads');
+const uploadsDir = path.join(__dirname, 'secure_uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
 }
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/veyr_stays';
@@ -77,7 +78,7 @@ const Investment = mongoose.model('Investment', investmentSchema);
 const MonthlyConfig = mongoose.model('MonthlyConfig', monthlyConfigSchema);
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, './secure_uploads/'),
+    destination: (req, file, cb) => cb(null, path.join(__dirname, 'secure_uploads')),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage: storage });
