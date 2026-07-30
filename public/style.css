@@ -877,3 +877,7 @@ body {
     position: relative;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+label .required { color: var(--danger); margin-left: 2px }
+input:invalid:not(:placeholder-shown), select:invalid:not(:placeholder-shown) { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger-bg) }
+input:valid:not(:placeholder-shown), select:valid { border-color: var(--success); box-shadow: 0 0 0 2px var(--success-bg) }
