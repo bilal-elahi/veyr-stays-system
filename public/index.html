@@ -172,8 +172,8 @@
                 </div>
                 <div class="form-group"><label>Amount (PKR)</label><input type="number" id="bookingAmount" required></div>
                 <div class="form-group"><label>Booking Reference / Source</label><input type="text" id="bookingReference" placeholder="e.g., Walk-in, Booking.com, Phone"></div>
-                <div class="form-group"><label>Upload ID Card Front Image</label><input type="file" id="idCardFrontFile" accept="image/*"></div>
-                <div class="form-group"><label>Upload ID Card Back Image</label><input type="file" id="idCardBackFile" accept="image/*"></div>
+                <div class="form-group"><label>Upload ID Card Front Image</label><input type="file" id="idCardFrontFile" accept="image/*" capture="environment"></div>
+                <div class="form-group"><label>Upload ID Card Back Image</label><input type="file" id="idCardBackFile" accept="image/*" capture="environment"></div>
                 <button type="submit" class="btn-primary">Save Booking</button>
             </form>
         </div>
@@ -222,8 +222,8 @@
                     <label for="editBookingReference">Reference / Source</label>
                     <input type="text" id="editBookingReference">
                 </div>
-                <div class="form-group"><label>Update ID Card Front Image</label><input type="file" id="editCardFrontFile" accept="image/*"></div>
-                <div class="form-group"><label>Update ID Card Back Image</label><input type="file" id="editCardBackFile" accept="image/*"></div>
+                <div class="form-group"><label>Update ID Card Front Image</label><input type="file" id="editCardFrontFile" accept="image/*" capture="environment"></div>
+                <div class="form-group"><label>Update ID Card Back Image</label><input type="file" id="editCardBackFile" accept="image/*" capture="environment"></div>
                 <button type="submit" class="btn-primary btn-full">Update Booking</button>
             </form>
         </div>
