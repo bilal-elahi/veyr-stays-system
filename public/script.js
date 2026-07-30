@@ -129,6 +129,19 @@ async function handleBillSubmit(e) {
     fetchDashboardData();
 }
 
+function openLightbox(src) {
+    let lb = document.getElementById('lightbox');
+    if (!lb) {
+        lb = document.createElement('div');
+        lb.id = 'lightbox';
+        lb.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;cursor:pointer';
+        lb.addEventListener('click', () => lb.style.display = 'none');
+        document.body.appendChild(lb);
+    }
+    lb.innerHTML = '<img src="' + src + '" style="max-width:90%;max-height:90%;border-radius:8px">';
+    lb.style.display = 'flex';
+}
+
 async function fetchDashboardData() {
     try {
         const response = await fetch('/api/data');
@@ -164,8 +177,8 @@ function renderBookingsTable(bookings) {
         const backImg = b.cnic_back || b.idCardBack;
         
         const imgSrc = (f) => f && (f.startsWith('http') || f.startsWith('data:')) ? f : '';
-        const frontLink = frontImg ? '<a href="' + imgSrc(frontImg) + '" target="_blank"><img src="' + imgSrc(frontImg) + '" class="cnic-thumb" alt="Front"></a>' : 'N/A';
-        const backLink = backImg ? '<a href="' + imgSrc(backImg) + '" target="_blank"><img src="' + imgSrc(backImg) + '" class="cnic-thumb" alt="Back"></a>' : 'N/A';
+        const frontLink = frontImg ? '<img src="' + imgSrc(frontImg) + '" class="cnic-thumb" alt="Front" onclick="openLightbox(this.src)">' : 'N/A';
+        const backLink = backImg ? '<img src="' + imgSrc(backImg) + '" class="cnic-thumb" alt="Back" onclick="openLightbox(this.src)">' : 'N/A';
 
         return '<tr>' +
             '<td>' + name + '</td>' +
