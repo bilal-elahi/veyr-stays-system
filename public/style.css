@@ -82,15 +82,14 @@ body {
 }
 
 .app-logo {
-    height: 60px;
-    width: auto;
+    width: 70px;
+    height: 70px;
     display: block;
-    max-width: 90px;
     object-fit: contain;
 }
 
 .app-brand-text {
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #fff;
     letter-spacing: 0.1em;
@@ -754,7 +753,7 @@ body {
     }
 
     .app-brand-text {
-        font-size: 0.7rem;
+        font-size: 0.85rem;
     }
 
     .action-bar {
@@ -831,7 +830,7 @@ body {
     }
 
     .app-brand-text {
-        font-size: 0.75rem;
+        font-size: 0.95rem;
     }
 
     .action-bar {
