@@ -111,13 +111,13 @@ app.get('/api/data', async (req, res) => {
             return res.json({ bookings: [], expenses: [], investments: [], monthlyConfig: { rent: 0, electric: 0, internet: 0 } });
         }
         const [bookings, expenses, investments, monthlyConfig] = await Promise.all([
-            Booking.find().sort({ _id: -1 }).lean(),
+            Booking.find().sort({ _id: -1 }).select('-cnic_front -cnic_back').lean(),
             Expense.find().sort({ _id: -1 }).lean(),
             Investment.find().sort({ _id: -1 }).lean(),
             MonthlyConfig.findOne().sort({ _id: -1 }).lean()
         ]);
 
-        const mappedBookings = bookings.map(b => ({ ...b, id: b._id }));
+        const mappedBookings = bookings.map(b => ({ ...b, id: b._id, cnic_front: '', cnic_back: '' }));
         const mappedExpenses = expenses.map(e => ({ ...e, id: e._id }));
         const mappedInvestments = investments.map(i => ({ ...i, id: i._id }));
 
@@ -209,6 +209,17 @@ app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
 
         await Booking.deleteOne({ _id: req.params.id });
         res.json({ message: 'Booking and associated images deleted successfully' });
+    } catch (err) {
+        res.json({ error: err.message });
+    }
+});
+
+app.get('/api/bookings/:id/images', authMiddleware, async (req, res) => {
+    try {
+        if (!isDbConnected()) return res.json({ error: 'Database not connected' });
+        const booking = await Booking.findById(req.params.id).select('cnic_front cnic_back').lean();
+        if (!booking) return res.status(404).json({ error: 'Booking not found' });
+        res.json({ cnic_front: booking.cnic_front || '', cnic_back: booking.cnic_back || '' });
     } catch (err) {
         res.json({ error: err.message });
     }

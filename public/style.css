@@ -59,22 +59,24 @@ body {
 }
 
 .app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
     background: linear-gradient(135deg, var(--header-bg), #1e4d8c);
-    padding: 16px 20px;
     position: sticky;
     top: 0;
     z-index: 100;
     box-shadow: 0 4px 20px rgba(30, 58, 95, 0.3);
 }
 
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+}
+
 .app-header h1 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #fff;
     letter-spacing: -0.01em;
@@ -95,25 +97,37 @@ body {
 
 .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
+}
+
+.header-booking-row {
+    padding: 0 16px 12px;
+}
+
+.btn-add-booking {
     width: 100%;
-}
-
-.header-actions .btn-primary {
-    background: #fff;
+    padding: 16px 20px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #f0f4ff);
     color: var(--primary-dark);
-    border: none;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(255,255,255,0.15);
+    letter-spacing: 0.01em;
+    transition: var(--transition);
 }
 
-.header-actions .btn-primary:hover {
-    background: var(--gray-100);
-    box-shadow: none;
+.btn-add-booking:hover {
+    background: #fff;
+    box-shadow: 0 6px 24px rgba(255,255,255,0.25);
+    transform: translateY(-1px);
 }
 
-.header-actions .btn-primary:active {
-    background: var(--gray-200);
-    transform: scale(0.97);
+.btn-add-booking:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(255,255,255,0.1);
 }
 
 .header-actions .btn-dark {
@@ -723,14 +737,26 @@ body {
         padding: 28px 28px 24px;
     }
 
+    .header-top {
+        padding: 12px 20px;
+    }
+
     .header-actions {
-        width: auto;
         flex: none;
     }
 
     .header-actions button {
         flex: none;
         padding: 8px 16px;
+    }
+
+    .header-booking-row {
+        padding: 0 20px 14px;
+    }
+
+    .btn-add-booking {
+        padding: 14px 20px;
+        font-size: 1rem;
     }
 
     .expense-summary-item {
@@ -744,11 +770,26 @@ body {
 
 @media (min-width: 768px) {
     .app-header {
-        padding: 14px 28px;
+        padding: 0;
+    }
+
+    .header-top {
+        padding: 14px 28px 10px;
     }
 
     .app-header h1 {
         font-size: 1.2rem;
+    }
+
+    .header-booking-row {
+        padding: 0 28px 16px;
+    }
+
+    .btn-add-booking {
+        width: auto;
+        display: inline-flex;
+        padding: 12px 28px;
+        font-size: 0.95rem;
     }
 
     .main-content {
@@ -792,7 +833,7 @@ body {
     }
 
     .header-actions {
-        width: auto;
+        flex: none;
     }
 
     .header-actions button {
@@ -819,6 +860,14 @@ body {
 }
 
 @media (min-width: 1024px) {
+    .header-top {
+        padding: 14px 32px 10px;
+    }
+
+    .header-booking-row {
+        padding: 0 32px 16px;
+    }
+
     .main-content {
         padding: 28px 32px;
     }

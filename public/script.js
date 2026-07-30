@@ -181,11 +181,32 @@ function openLightbox(src) {
     lb.style.display = 'flex';
 }
 
+const cnicCache = {};
+async function loadCnicImage(bookingId, side) {
+    const key = bookingId + '_' + side;
+    if (cnicCache[key]) { openLightbox(cnicCache[key]); return; }
+    try {
+        const res = await apiFetch('/api/bookings/' + bookingId + '/images');
+        const data = await res.json();
+        const url = data[side === 'front' ? 'cnic_front' : 'cnic_back'];
+        if (url) {
+            cnicCache[key] = url;
+            openLightbox(url);
+        } else {
+            alert('No image available');
+        }
+    } catch {
+        alert('Failed to load image');
+    }
+}
+
 async function fetchDashboardData() {
     try {
         const response = await fetch('/api/data');
         const data = await response.json();
         
+        // Clear cached CNIC images so fresh ones are loaded on next view
+        Object.keys(cnicCache).forEach(k => delete cnicCache[k]);
         allBookingsCache = data.bookings || [];
         renderBookingsTable(allBookingsCache);
         populateFinanceTables(data);
@@ -212,12 +233,8 @@ function renderBookingsTable(bookings) {
         const type = b.bookingType || 'Full Day';
         const amount = b.payment_amount !== undefined && b.payment_amount !== null ? b.payment_amount : (b.amount || 0);
         const ref = b.reference_name || b.bookingReference || 'N/A';
-        const frontImg = b.cnic_front || b.idCardFront;
-        const backImg = b.cnic_back || b.idCardBack;
-        
-        const imgSrc = (f) => f && (f.startsWith('http') || f.startsWith('data:')) ? f : '';
-        const frontLink = frontImg ? '<img src="' + imgSrc(frontImg) + '" class="cnic-thumb" alt="Front" onclick="openLightbox(this.src)">' : 'N/A';
-        const backLink = backImg ? '<img src="' + imgSrc(backImg) + '" class="cnic-thumb" alt="Back" onclick="openLightbox(this.src)">' : 'N/A';
+        const frontLink = '<button class="btn-secondary btn-sm" onclick="loadCnicImage(\'' + b.id + '\',\'front\')">Front</button>';
+        const backLink = '<button class="btn-secondary btn-sm" onclick="loadCnicImage(\'' + b.id + '\',\'back\')">Back</button>';
 
         return '<tr>' +
             '<td>' + name + '</td>' +
@@ -345,7 +362,7 @@ function compressImage(file, maxSize) {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
                 reader.readAsDataURL(blob);
-            }, 'image/jpeg', 0.6);
+            }, 'image/jpeg', 0.45);
         };
         img.src = URL.createObjectURL(file);
     });
@@ -362,8 +379,8 @@ async function handleBookingSubmit(e) {
     const backInput = document.getElementById("idCardBackFile");
 
     let cnic_front = '', cnic_back = '';
-    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 1200);
-    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 1200);
+    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 800);
+    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 800);
 
     const payload = {
         guest_name: document.getElementById("guestName").value,
@@ -387,6 +404,7 @@ async function handleBookingSubmit(e) {
         if (result.success) {
             document.getElementById("bookingModal").style.display = "none";
             e.target.reset();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             fetchDashboardData();
         } else {
             btn.disabled = false;
@@ -431,8 +449,8 @@ async function handleEditBookingSubmit(e) {
     const backInput = document.getElementById("editCardBackFile");
 
     let cnic_front = '', cnic_back = '';
-    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 1200);
-    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 1200);
+    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 800);
+    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 800);
 
     const payload = {
         guest_name: document.getElementById("editGuestName").value,
@@ -454,6 +472,7 @@ async function handleEditBookingSubmit(e) {
 
         if (response.ok) {
             document.getElementById("editBookingModal").style.display = "none";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             fetchDashboardData();
         } else {
             alert("Failed to update booking.");
