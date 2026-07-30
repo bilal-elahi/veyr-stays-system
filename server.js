@@ -192,8 +192,23 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
 app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
     try {
         if (!isDbConnected()) return res.json({ error: 'Database not connected' });
-        const result = await Booking.deleteOne({ _id: req.params.id });
-        res.json({ message: 'Booking deleted successfully', changes: result.deletedCount });
+        const booking = await Booking.findById(req.params.id).lean();
+        if (!booking) return res.status(404).json({ error: 'Booking not found' });
+
+        const deleteFromCloudinary = async (url) => {
+            if (url && url.includes('res.cloudinary.com') && useCloudinary) {
+                const parts = url.split('/');
+                const publicId = parts.slice(-2).join('/').replace(/\.[^.]+$/, '');
+                await cloudinary.uploader.destroy(publicId).catch(() => {});
+            }
+        };
+        await Promise.all([
+            deleteFromCloudinary(booking.cnic_front),
+            deleteFromCloudinary(booking.cnic_back)
+        ]);
+
+        await Booking.deleteOne({ _id: req.params.id });
+        res.json({ message: 'Booking and associated images deleted successfully' });
     } catch (err) {
         res.json({ error: err.message });
     }
