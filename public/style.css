@@ -75,17 +75,22 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 4px;
+    width: 100px;
+    height: 100px;
 }
 
 .app-logo {
-    height: 58px;
+    height: 60px;
     width: auto;
     display: block;
+    max-width: 90px;
+    object-fit: contain;
 }
 
 .app-brand-text {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: 700;
     color: #fff;
     letter-spacing: 0.1em;
@@ -734,10 +739,6 @@ body {
         padding: 10px 20px;
     }
 
-    .app-logo {
-        height: 64px;
-    }
-
     .expense-summary-item {
         padding: 10px 14px;
     }
@@ -752,12 +753,8 @@ body {
         padding: 0 28px;
     }
 
-    .app-logo {
-        height: 72px;
-    }
-
     .app-brand-text {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
     }
 
     .action-bar {
@@ -833,12 +830,8 @@ body {
         padding: 0 32px;
     }
 
-    .app-logo {
-        height: 80px;
-    }
-
     .app-brand-text {
-        font-size: 0.9rem;
+        font-size: 0.75rem;
     }
 
     .action-bar {
