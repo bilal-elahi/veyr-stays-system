@@ -393,7 +393,7 @@ function compressImage(file, maxSize) {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
                 reader.readAsDataURL(blob);
-            }, 'image/jpeg', 0.45);
+            }, 'image/jpeg', 0.85);
         };
         img.src = URL.createObjectURL(file);
     });
@@ -410,8 +410,8 @@ async function handleBookingSubmit(e) {
     const backInput = document.getElementById("idCardBackFile");
 
     let cnic_front = '', cnic_back = '';
-    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 800);
-    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 800);
+    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 1200);
+    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 1200);
 
     const payload = {
         guest_name: document.getElementById("guestName").value,
@@ -482,8 +482,8 @@ async function handleEditBookingSubmit(e) {
     const backInput = document.getElementById("editCardBackFile");
 
     let cnic_front = '', cnic_back = '';
-    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 800);
-    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 800);
+    if (frontInput.files && frontInput.files[0]) cnic_front = await compressImage(frontInput.files[0], 1200);
+    if (backInput.files && backInput.files[0]) cnic_back = await compressImage(backInput.files[0], 1200);
 
     const payload = {
         guest_name: document.getElementById("editGuestName").value,
