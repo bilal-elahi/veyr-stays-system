@@ -37,7 +37,7 @@
         <div class="main-content">
         <!-- Dashboard Metrics Summary -->
         <section class="metrics-grid">
-            <div class="metric-card accent-primary">
+            <div class="metric-card accent-primary" id="totalBookingsCard" style="cursor:pointer" title="Click to show all bookings">
                 <h3>Total Bookings</h3>
                 <p id="totalBookings">0</p>
             </div>
@@ -70,6 +70,15 @@
                 <div class="filter-group">
                     <label class="filter-label" for="bookingMonthFilter">Month</label>
                     <input type="month" id="bookingMonthFilter" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="bookingTypeFilter">Type</label>
+                    <select id="bookingTypeFilter" class="filter-input">
+                        <option value="">All</option>
+                        <option value="Full Day">Full Day</option>
+                        <option value="Short Booking">Short Booking</option>
+                        <option value="Night">Night</option>
+                    </select>
                 </div>
                 <div class="search-wrap">
                     <input type="text" id="searchBookingInput" class="search-input" placeholder="Search by guest name or reference...">

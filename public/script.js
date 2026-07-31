@@ -105,6 +105,18 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFilteredBookings();
     });
 
+    document.getElementById("totalBookingsCard").addEventListener("click", () => {
+        pendingFilterActive = false;
+        document.getElementById("pendingRevenueCard").style.opacity = '1';
+        const monthFilter = document.getElementById("bookingMonthFilter");
+        if (monthFilter) monthFilter.value = '';
+        const typeFilter = document.getElementById("bookingTypeFilter");
+        if (typeFilter) typeFilter.value = '';
+        const searchInput = document.getElementById("searchBookingInput");
+        if (searchInput) searchInput.value = '';
+        renderFilteredBookings();
+    });
+
     document.getElementById("searchBookingInput").addEventListener("input", () => {
         renderFilteredBookings();
     });
@@ -114,6 +126,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const now = new Date();
         monthFilter.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
         monthFilter.addEventListener("change", () => {
+            renderFilteredBookings();
+        });
+    }
+
+    const typeFilterEl = document.getElementById("bookingTypeFilter");
+    if (typeFilterEl) {
+        typeFilterEl.addEventListener("change", () => {
             renderFilteredBookings();
         });
     }
@@ -275,6 +294,8 @@ function renderFilteredBookings() {
     const selectedMonth = monthInput ? monthInput.value : '';
     const searchInput = document.getElementById("searchBookingInput");
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const typeFilter = document.getElementById("bookingTypeFilter");
+    const selectedType = typeFilter ? typeFilter.value : '';
 
     let filtered = allBookingsCache;
 
@@ -283,6 +304,10 @@ function renderFilteredBookings() {
             const dateStr = b.check_in_date || b.checkInDate || b.created_at || '';
             return dateStr.startsWith(selectedMonth);
         });
+    }
+
+    if (selectedType) {
+        filtered = filtered.filter(b => (b.bookingType || 'Full Day') === selectedType);
     }
 
     if (searchTerm) {
