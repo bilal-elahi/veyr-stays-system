@@ -2,6 +2,7 @@ let allBookingsCache = [];
 let allExpensesCache = [];
 let allInvestmentsCache = [];
 let allDataCache = null;
+let pendingFilterActive = false;
 
 function showToast(msg, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -97,6 +98,12 @@ document.addEventListener("DOMContentLoaded", () => {
         invFilter.addEventListener("change", () => renderFilteredInvestments());
     }
     document.getElementById("searchInvestmentInput")?.addEventListener("input", () => renderFilteredInvestments());
+
+    document.getElementById("pendingRevenueCard").addEventListener("click", () => {
+        pendingFilterActive = !pendingFilterActive;
+        document.getElementById("pendingRevenueCard").style.opacity = pendingFilterActive ? '0.7' : '1';
+        renderFilteredBookings();
+    });
 
     document.getElementById("searchBookingInput").addEventListener("input", () => {
         renderFilteredBookings();
@@ -285,6 +292,10 @@ function renderFilteredBookings() {
             (b.reference_name && b.reference_name.toLowerCase().includes(searchTerm)) ||
             (b.bookingReference && b.bookingReference.toLowerCase().includes(searchTerm))
         );
+    }
+
+    if (pendingFilterActive) {
+        filtered = filtered.filter(b => (b.payment_status || 'Paid') === 'Pending');
     }
 
     renderBookingsTable(filtered);
