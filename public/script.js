@@ -281,7 +281,9 @@ function renderFilteredBookings() {
     if (searchTerm) {
         filtered = filtered.filter(b =>
             (b.guest_name && b.guest_name.toLowerCase().includes(searchTerm)) ||
-            (b.guestName && b.guestName.toLowerCase().includes(searchTerm))
+            (b.guestName && b.guestName.toLowerCase().includes(searchTerm)) ||
+            (b.reference_name && b.reference_name.toLowerCase().includes(searchTerm)) ||
+            (b.bookingReference && b.bookingReference.toLowerCase().includes(searchTerm))
         );
     }
 
