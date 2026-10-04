@@ -795,7 +795,16 @@ app.get('/api/export', authMiddleware, async (req, res) => {
 });
 
 function startServer() {
-    connectDb().catch(err => console.error('MongoDB connection error:', err.message));
+    connectDb().catch(err => {
+        if (mongoose.connection.readyState === 1) {
+            // We reached MongoDB but the first-boot bootstrap failed, so there may
+            // be no admin account. Say that plainly instead of blaming the DB.
+            console.error('Startup failed while preparing the database:', err.message);
+            console.error('The app is running but NO ADMIN ACCOUNT may exist. Every login will fail with "Invalid username or password" until this is fixed.');
+        } else {
+            console.error('MongoDB connection error:', err.message);
+        }
+    });
     return app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
