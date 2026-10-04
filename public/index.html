@@ -2,28 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Veyr Stays System</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231d4ed8'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='white'>V</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="loginOverlay" class="modal" style="display:flex;background:rgba(0,0,0,0.8);z-index:10000">
-            <div class="modal-content" style="max-width:360px">
-                <h2 style="text-align:center">Veyr Stays Login</h2>
-                <form id="loginForm">
-                    <div class="form-group"><label>Username</label><input type="text" id="loginUsername" value="Veyr Stays" required autocomplete="username"></div>
-                    <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required autocomplete="current-password"></div>
-                    <button type="submit" class="btn-primary btn-full" style="margin-top:8px">Login</button>
-                    <p id="loginError" style="color:var(--danger);text-align:center;margin-top:8px;display:none"></p>
-                </form>
+    <div id="loginOverlay" class="modal auth-overlay" style="display:flex">
+        <div class="modal-content auth-content">
+            <div class="auth-brand">
+                <img src="/veyr%20stays.jpeg" alt="Veyr Stays" class="app-logo">
+                <div>
+                    <span class="app-brand-text auth-brand-text">Veyr Stays</span>
+                    <p class="auth-tagline">Bookings &amp; monthly profit for your property</p>
+                </div>
             </div>
+            <div class="auth-tabs" id="authTabs">
+                <button type="button" class="auth-tab is-active" data-auth-tab="login">Log in</button>
+                <button type="button" class="auth-tab" data-auth-tab="register">Create account</button>
+            </div>
+
+            <form id="loginForm" class="auth-pane is-active">
+                <div class="form-group"><label for="loginUsername">Username</label><input type="text" id="loginUsername" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+                <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" required autocomplete="current-password"></div>
+                <button type="submit" class="btn-primary btn-full">Log in</button>
+                <button type="button" id="showForgotBtn" class="auth-link">Forgot your password?</button>
+            </form>
+
+            <form id="registerForm" class="auth-pane">
+                <div class="form-group"><label for="registerUsername">Username</label><input type="text" id="registerUsername" required minlength="3" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false"><small class="form-hint">3-32 characters: letters, numbers, dot, dash or underscore.</small></div>
+                <div class="form-group"><label for="registerProperty">Property / Apartment Name</label><input type="text" id="registerProperty" maxlength="80" placeholder="e.g. Green Villa, Gulberg"></div>
+                <div class="form-group"><label for="registerEmail">Contact Email (optional)</label><input type="email" id="registerEmail" maxlength="120" autocomplete="email"></div>
+                <div class="form-group"><label for="registerPassword">Password</label><input type="password" id="registerPassword" required minlength="6" autocomplete="new-password"><small class="form-hint">At least 6 characters.</small></div>
+                <button type="submit" class="btn-primary btn-full">Create my account</button>
+            </form>
+
+            <form id="forgotForm" class="auth-pane">
+                <p class="modal-desc">Enter your username and contact detail. Support will set a new password for you.</p>
+                <div class="form-group"><label for="forgotUsername">Username</label><input type="text" id="forgotUsername" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+                <div class="form-group"><label for="forgotContact">Contact / Phone (optional)</label><input type="text" id="forgotContact" maxlength="120" placeholder="How support can reach you"></div>
+                <button type="submit" class="btn-primary btn-full">Request a reset</button>
+                <button type="button" id="showLoginBtn" class="auth-link">Back to log in</button>
+            </form>
+
+            <p id="loginError" style="display:none"></p>
         </div>
+    </div>
     <div class="app-container">
         <header class="app-header">
             <div class="app-brand">
                 <img src="/veyr%20stays.jpeg" alt="Veyr Stays" class="app-logo">
-                <span class="app-brand-text">Veyr Stays</span>
+                <div class="app-brand-text-group">
+                    <span class="app-brand-text">Veyr Stays</span>
+                    <span class="app-property" id="headerPropertyName"></span>
+                </div>
             </div>
         </header>
         <div class="action-bar">
@@ -31,6 +63,8 @@
             <button id="openBillModal" class="btn-secondary btn-dark">+ Add Bill</button>
             <button id="openFinanceModal" class="btn-secondary">+ Expense / Investment</button>
             <button id="exportBtn" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Download</button>
+            <button id="refreshBtn" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Refresh</button>
+            <button id="openAdminModal" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff;display:none">Admin</button>
             <button id="openConfigModal" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Settings</button>
         </div>
 
@@ -60,6 +94,60 @@
             <div class="metric-card accent-primary">
                 <h3>Net Profit</h3>
                 <p id="netProfit">0 PKR</p>
+            </div>
+        </section>
+
+        <!-- Month-wise Profit Breakdown -->
+        <section class="card-section" id="profitSection">
+            <div class="section-header">
+                <h2>Monthly Profit Breakdown</h2>
+                <div class="filter-group">
+                    <label class="filter-label" for="profitMonthFilter">Month</label>
+                    <input type="month" id="profitMonthFilter" class="filter-input">
+                    <button id="clearProfitFocusBtn" class="btn-secondary btn-sm" type="button">All</button>
+                </div>
+            </div>
+            <p class="section-hint">Profit is calculated per calendar month from booking check-in dates and expense/bill months. Tap a month below to focus it.</p>
+            <div class="expense-summary" id="profitSummary">
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Months</span>
+                    <span class="expense-summary-value" id="profitMonthCount">0</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Revenue</span>
+                    <span class="expense-summary-value" id="profitTotalRevenue">0 PKR</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Expenses</span>
+                    <span class="expense-summary-value" id="profitTotalExpenses">0 PKR</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Pending</span>
+                    <span class="expense-summary-value" id="profitTotalPending">0 PKR</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="expense-summary-label">Net Profit</span>
+                    <span class="expense-summary-value" id="profitTotalNet">0 PKR</span>
+                </div>
+            </div>
+            <div class="profit-chart" id="profitChart"></div>
+            <div class="table-wrap">
+                <table class="data-table" id="profitTable">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Bookings</th>
+                            <th>Revenue</th>
+                            <th>Expenses</th>
+                            <th>Pending</th>
+                            <th>Net Profit</th>
+                            <th>Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic rows injected via script.js -->
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -372,17 +460,74 @@
         </div>
     </div>
 
-    <!-- Settings / Monthly Config Modal -->
+    <!-- Settings / Account / Monthly Config Modal -->
     <div id="configModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" data-target="configModal">&times;</span>
-            <h2>Monthly Auto-Bill Settings</h2>
+            <h2>Settings</h2>
+
+            <form id="accountForm" novalidate>
+                <h3 class="modal-subtitle">Your Account</h3>
+                <div class="form-group"><label for="accountUsername">Username</label><input type="text" id="accountUsername" disabled></div>
+                <div class="form-group"><label for="accountPropertyName">Property / Apartment Name</label><input type="text" id="accountPropertyName" maxlength="80" placeholder="e.g. Green Villa, Gulberg"></div>
+                <div class="form-group"><label for="accountEmail">Contact Email</label><input type="email" id="accountEmail" maxlength="120" autocomplete="email"></div>
+                <button type="submit" class="btn-primary btn-full">Save Account</button>
+            </form>
+
+            <hr class="modal-divider">
+
+            <form id="passwordForm" novalidate>
+                <h3 class="modal-subtitle">Change Password</h3>
+                <div class="form-group"><label for="currentPassword">Current Password</label><input type="password" id="currentPassword" autocomplete="current-password"></div>
+                <div class="form-group"><label for="newPassword">New Password</label><input type="password" id="newPassword" minlength="6" autocomplete="new-password"><small class="form-hint">At least 6 characters.</small></div>
+                <div class="form-group"><label for="confirmPassword">Confirm New Password</label><input type="password" id="confirmPassword" minlength="6" autocomplete="new-password"></div>
+                <button type="submit" class="btn-primary btn-full">Update Password</button>
+            </form>
+
+            <hr class="modal-divider">
+
             <form id="configForm">
-                <p style="margin-bottom:12px;color:var(--gray-500);font-size:13px">These amounts are used to auto-create bills on the 1st of each month.</p>
-                <div class="form-group"><label>Rent (PKR)</label><input type="number" id="configRent" required></div>
-                <div class="form-group"><label>Electric Bill (PKR)</label><input type="number" id="configElectric" required></div>
-                <div class="form-group"><label>Internet Bill (PKR)</label><input type="number" id="configInternet" required></div>
-                <button type="submit" class="btn-primary btn-full">Save Settings</button>
+                <h3 class="modal-subtitle">Monthly Auto-Bill Settings</h3>
+                <p class="modal-desc">These amounts auto-create bills on the 1st of each month.</p>
+                <div class="form-group"><label for="configRent">Rent (PKR)</label><input type="number" id="configRent" min="0"></div>
+                <div class="form-group"><label for="configElectric">Electric Bill (PKR)</label><input type="number" id="configElectric" min="0"></div>
+                <div class="form-group"><label for="configInternet">Internet Bill (PKR)</label><input type="number" id="configInternet" min="0"></div>
+                <button type="submit" class="btn-primary btn-full">Save Monthly Bills</button>
+            </form>
+
+            <hr class="modal-divider">
+            <button type="button" id="logoutBtn" class="btn-danger btn-full">Log Out</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel: accounts + password reset requests -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="adminModal">&times;</span>
+            <h2>Admin &mdash; Accounts</h2>
+
+            <h3 class="modal-subtitle">Password Reset Requests</h3>
+            <div id="adminResetRequests" class="admin-panel"></div>
+
+            <h3 class="modal-subtitle">All Accounts</h3>
+            <div class="admin-panel-actions">
+                <button type="button" id="adminRefreshBtn" class="btn-secondary btn-sm">Reload</button>
+            </div>
+            <div id="adminUserList" class="admin-panel"></div>
+        </div>
+    </div>
+
+    <!-- Admin: set a new password for a customer -->
+    <div id="adminSetPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-target="adminSetPasswordModal">&times;</span>
+            <h2>Set New Password</h2>
+            <p class="modal-desc" id="adminSetPasswordTarget"></p>
+            <form id="adminSetPasswordForm" novalidate>
+                <input type="hidden" id="adminSetPasswordUserId">
+                <input type="hidden" id="adminSetPasswordRequestId">
+                <div class="form-group"><label for="adminSetPasswordValue">New Password</label><input type="text" id="adminSetPasswordValue" minlength="6" required><small class="form-hint">At least 6 characters. Share it with the customer and ask them to change it after logging in.</small></div>
+                <button type="submit" class="btn-primary btn-full">Set Password</button>
             </form>
         </div>
     </div>
