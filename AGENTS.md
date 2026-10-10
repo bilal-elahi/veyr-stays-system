@@ -44,6 +44,7 @@ There is no `dotenv` dependency — env vars must come from the shell or the hos
 - Public self-registration is open: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/forgot-password`.
 - Forgot-password deliberately creates a `PasswordReset` row for the admin to action rather than emailing a token — there is no mail transport. The response is always generic so usernames cannot be enumerated, and the route is IP rate-limited.
 - `PUT /api/auth/password` is self-service and requires the current password.
+- `PUT /api/auth/profile` is self-service and also accepts an optional `username`, so an account can rename itself from Settings without a database script. It is sanitized (trim + lowercase), validated against `/^[a-z0-9._-]{3,32}$/`, and rejected with 409 if taken.
 - Everything under `/api/admin/*` requires an admin token.
 
 ## Architecture

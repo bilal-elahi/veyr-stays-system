@@ -468,7 +468,7 @@
 
             <form id="accountForm" novalidate>
                 <h3 class="modal-subtitle">Your Account</h3>
-                <div class="form-group"><label for="accountUsername">Username</label><input type="text" id="accountUsername" disabled></div>
+                <div class="form-group"><label for="accountUsername">Username</label><input type="text" id="accountUsername" minlength="3" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false"><small class="form-hint">3-32 characters: letters, numbers, dot, dash or underscore.</small></div>
                 <div class="form-group"><label for="accountPropertyName">Property / Apartment Name</label><input type="text" id="accountPropertyName" maxlength="80" placeholder="e.g. Green Villa, Gulberg"></div>
                 <div class="form-group"><label for="accountEmail">Contact Email</label><input type="email" id="accountEmail" maxlength="120" autocomplete="email"></div>
                 <button type="submit" class="btn-primary btn-full">Save Account</button>

@@ -1274,6 +1274,7 @@ async function handleAccountSubmit(e) {
         const res = await apiFetch('/api/auth/profile', {
             method: 'PUT',
             body: JSON.stringify({
+                username: document.getElementById('accountUsername').value,
                 property_name: document.getElementById('accountPropertyName').value,
                 contact_email: document.getElementById('accountEmail').value
             })

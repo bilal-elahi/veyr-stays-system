@@ -420,9 +420,23 @@ app.put('/api/auth/password', authMiddleware, async (req, res) => {
 
 app.put('/api/auth/profile', authMiddleware, async (req, res) => {
     if (!isDbConnected()) return res.status(503).json({ error: 'Database not connected' });
-    const property_name = String(req.body.property_name || '').trim().slice(0, 80);
-    const contact_email = String(req.body.contact_email || '').trim().slice(0, 120);
-    await User.updateOne({ _id: req.user._id }, { $set: { property_name, contact_email } });
+    const update = {
+        property_name: String(req.body.property_name || '').trim().slice(0, 80),
+        contact_email: String(req.body.contact_email || '').trim().slice(0, 120)
+    };
+
+    if (req.body.username !== undefined) {
+        const username = sanitizeUsername(req.body.username);
+        if (username !== req.user.username) {
+            const problem = validateCredentials(username, 'placeholder');
+            if (problem) return res.status(400).json({ error: problem });
+            const taken = await User.findOne({ username, _id: { $ne: req.user._id } }).lean();
+            if (taken) return res.status(409).json({ error: 'That username is already taken.' });
+            update.username = username;
+        }
+    }
+
+    await User.updateOne({ _id: req.user._id }, { $set: update });
     const fresh = await User.findById(req.user._id).lean();
     res.json({ success: true, user: publicUser(fresh) });
 });

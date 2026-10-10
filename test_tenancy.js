@@ -242,6 +242,17 @@ function section(title) {
     check('property name updated', profile.body.user.property_name === 'Green Villa Annex', profile.body);
     check('/api/auth/me reflects the change', (await api.get('/api/auth/me', aliceToken2)).body.user.property_name === 'Green Villa Annex');
 
+    section('Username can be changed from account settings');
+    const bookingsBeforeRename = (await api.get('/api/data', aliceToken2)).body.bookings.length;
+    check('invalid new username rejected', (await api.put('/api/auth/profile', { username: 'a b!', property_name: 'Green Villa Annex' }, aliceToken2)).status === 400);
+    check('username already in use rejected', (await api.put('/api/auth/profile', { username: 'bob', property_name: 'Green Villa Annex' }, aliceToken2)).status === 409);
+    const renamed = await api.put('/api/auth/profile', { username: 'Alice_Renamed', property_name: 'Green Villa Annex' }, aliceToken2);
+    check('username change accepted and lowercased', renamed.body.success === true && renamed.body.user.username === 'alice_renamed', renamed.body);
+    check('old username no longer logs in', (await api.post('/api/auth/login', { username: 'alice', password: 'alicepass2' })).body.success === false);
+    check('new username logs in, case/space-insensitively', (await api.post('/api/auth/login', { username: '  ALICE_RENAMED  ', password: 'alicepass2' })).body.success === true);
+    check('renaming kept the account records', (await api.get('/api/data', aliceToken2)).body.bookings.length === bookingsBeforeRename, { bookingsBeforeRename });
+    check('renamed back for the remaining tests', (await api.put('/api/auth/profile', { username: 'alice', property_name: 'Green Villa Annex' }, aliceToken2)).body.user.username === 'alice');
+
     section('Account deletion is scoped');
     const carol = await api.post('/api/auth/register', { username: 'carol', password: 'carolpass', property_name: 'Teardown House' });
     const carolToken = carol.body.token;
