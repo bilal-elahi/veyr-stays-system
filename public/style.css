@@ -418,6 +418,53 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
+.app-view {
+    display: none;
+}
+
+.app-view.is-open {
+    display: block;
+}
+
+.view-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    background: #fff;
+    border-bottom: 1px solid var(--gray-200);
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(30, 58, 95, 0.06);
+}
+
+.view-bar .view-btn {
+    flex: 1 1 auto;
+    padding: 8px 12px;
+    min-height: 36px;
+    border: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    color: var(--gray-700);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.view-bar .view-btn:hover {
+    background: var(--gray-100);
+}
+
+.view-bar .view-btn:active {
+    transform: scale(0.97);
+}
+
+.view-bar .view-btn.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
 .main-content {
     padding: 14px 10px;
     min-width: 0;
@@ -1491,4 +1538,29 @@ input:valid:not(:placeholder-shown), select:valid { border-color: var(--success)
 @keyframes toastOut {
     from { opacity: 1; transform: translateX(0); }
     to { opacity: 0; transform: translateX(40px); }
+}
+
+@media (min-width: 480px) {
+    .view-bar {
+        padding: 8px 20px;
+        gap: 8px;
+    }
+}
+
+@media (min-width: 768px) {
+    .view-bar {
+        padding: 10px 28px;
+        gap: 10px;
+    }
+
+    .view-bar .view-btn {
+        flex: 0 0 auto;
+        padding: 9px 18px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .view-bar {
+        padding: 12px 32px;
+    }
 }

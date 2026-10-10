@@ -62,6 +62,7 @@ There is no `dotenv` dependency — env vars must come from the shell or the hos
 - All API endpoints except the three public auth routes require JWT auth.
 - Booking PUT endpoint DOES update `cnic_front`/`cnic_back` if provided.
 - Month-wise profit is computed entirely client-side in `computeMonthlyProfit()` — bookings bucket by check-in month, expenses by `bill_month` (falling back to expense date). The top metric cards stay all-time totals.
+- The dashboard is button-driven: the summary, bookings, expenses and investments sections carry `.app-view` and stay hidden until a `.view-btn[data-view]` is tapped. `openView()` / `toggleView()` / `closeAllViews()` in `script.js` manage it, and tapping the active button collapses back to the buttons-only landing screen. Hiding the profit chart is safe — it is CSS bars, not a canvas.
 - Every dynamically rendered `<td>` MUST carry a `data-label` attribute; under 768px the CSS turns tables into labeled cards using `td::before { content: attr(data-label) }`.
 - Submit buttons must restore `disabled`/label in a `finally` block, otherwise the modal stays stuck on "Saving..." after a successful save (`form.reset()` does not reset button state).
 - Customer-supplied text rendered into the admin panel MUST go through `esc()`. A customer controls their own property name and contact details, and those values are rendered in the *admin's* session — skipping this is a tenant-to-admin escalation.

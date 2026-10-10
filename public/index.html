@@ -68,7 +68,15 @@
             <button id="openConfigModal" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Settings</button>
         </div>
 
+        <div class="view-bar" id="viewBar">
+            <button type="button" class="view-btn" data-view="summary">Summary</button>
+            <button type="button" class="view-btn" data-view="bookings">Bookings</button>
+            <button type="button" class="view-btn" data-view="expenses">Expenses</button>
+            <button type="button" class="view-btn" data-view="investments">Investments</button>
+        </div>
+
         <div class="main-content">
+        <div id="view-summary" class="app-view">
         <!-- Dashboard Metrics Summary -->
         <section class="metrics-grid">
             <div class="metric-card accent-primary" id="totalBookingsCard" style="cursor:pointer" title="Click to show all bookings">
@@ -150,9 +158,10 @@
                 </table>
             </div>
         </section>
+        </div>
 
         <!-- Bookings Section with Search & Responsive Scroll Wrapper -->
-        <section class="card-section">
+        <section class="card-section app-view" id="view-bookings">
             <div class="section-header">
                 <h2>Bookings Management</h2>
                 <div class="filter-group">
@@ -214,7 +223,7 @@
 
         <!-- Financial Tracking Section -->
         <section class="financial-split-grid">
-            <div class="card-section">
+            <div class="card-section app-view" id="view-expenses">
                 <div class="section-header">
                     <h2>Expenses Log (Includes Auto-Monthly Bills)</h2>
                     <div class="filter-group">
@@ -261,7 +270,7 @@
                 </div>
             </div>
 
-            <div class="card-section">
+            <div class="card-section app-view" id="view-investments">
                 <div class="section-header">
                     <h2>Investments Log</h2>
                     <div class="filter-group">

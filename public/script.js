@@ -111,6 +111,31 @@ function applyCurrentUser(user) {
     }
 }
 
+function closeAllViews() {
+    document.querySelectorAll('.app-view').forEach(v => v.classList.remove('is-open'));
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('is-active'));
+}
+
+function openView(name) {
+    const target = document.getElementById('view-' + name);
+    if (!target) return;
+    closeAllViews();
+    target.classList.add('is-open');
+    const btn = document.querySelector('.view-btn[data-view="' + name + '"]');
+    if (btn) btn.classList.add('is-active');
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleView(name) {
+    const target = document.getElementById('view-' + name);
+    if (!target) return;
+    if (target.classList.contains('is-open')) {
+        closeAllViews();
+        return;
+    }
+    openView(name);
+}
+
 async function login(username, password) {
     const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -133,6 +158,7 @@ async function logout() {
     allExpensesCache = [];
     allInvestmentsCache = [];
     allDataCache = null;
+    closeAllViews();
     setAuthTab('login');
     showLoginOverlay();
     document.getElementById('loginUsername').value = '';
@@ -269,6 +295,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("exportBtn").addEventListener("click", handleExport);
     document.getElementById("refreshBtn").addEventListener("click", handleRefresh);
 
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => toggleView(btn.dataset.view));
+    });
+
     const profitMonthFilter = document.getElementById("profitMonthFilter");
     if (profitMonthFilter) {
         profitMonthFilter.addEventListener("change", () => {
@@ -315,12 +345,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("searchInvestmentInput")?.addEventListener("input", () => renderFilteredInvestments());
 
     document.getElementById("pendingRevenueCard").addEventListener("click", () => {
+        openView('bookings');
         pendingFilterActive = !pendingFilterActive;
         document.getElementById("pendingRevenueCard").style.opacity = pendingFilterActive ? '0.7' : '1';
         renderFilteredBookings();
     });
 
     document.getElementById("totalBookingsCard").addEventListener("click", () => {
+        openView('bookings');
         pendingFilterActive = false;
         document.getElementById("pendingRevenueCard").style.opacity = '1';
         const monthFilter = document.getElementById("bookingMonthFilter");
