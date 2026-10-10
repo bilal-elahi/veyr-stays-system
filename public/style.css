@@ -1102,6 +1102,13 @@ body.landing-mode .main-content {
     line-height: 1.5;
 }
 
+.profit-period {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gray-700);
+    margin: -4px 0 10px 0;
+}
+
 .val-gain {
     color: var(--success);
     font-weight: 700;

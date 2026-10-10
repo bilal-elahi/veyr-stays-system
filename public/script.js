@@ -852,12 +852,32 @@ function formatPKR(value) {
     return Number(value || 0).toLocaleString() + ' PKR';
 }
 
+const FIXED_BILL_TYPES = ['Rent', 'Electric', 'Internet'];
+
+function isFixedBillType(expense) {
+    return FIXED_BILL_TYPES.indexOf((expense && expense.bill_type) || '') !== -1;
+}
+
+function prevMonthKey(key) {
+    const parts = String(key || '').split('-');
+    if (parts.length !== 2) return '';
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 2, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function nextMonthKey(key) {
+    const parts = String(key || '').split('-');
+    if (parts.length !== 2) return '';
+    const d = new Date(Number(parts[0]), Number(parts[1]), 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
 function computeMonthlyProfit() {
     const buckets = new Map();
 
     const bucketFor = (key) => {
         if (!buckets.has(key)) {
-            buckets.set(key, { month: key, bookings: 0, revenue: 0, pending: 0, expenses: 0 });
+            buckets.set(key, { month: key, bookings: 0, revenue: 0, pending: 0, fixedBills: 0, regular: 0 });
         }
         return buckets.get(key);
     };
@@ -872,15 +892,35 @@ function computeMonthlyProfit() {
         else entry.revenue += amt;
     });
 
+    // Rent / electricity / internet are FIXED bills; everything else is a REGULAR
+    // expense. Both are bucketed by the month they belong to (bill_month / date).
     allExpensesCache.forEach(x => {
         const key = toMonthKey(x.bill_month || x.expense_date || x.date || x.created_at);
         if (!key) return;
-        bucketFor(key).expenses += Number(x.amount || 0) || 0;
+        const entry = bucketFor(key);
+        const amt = Number(x.amount || 0) || 0;
+        if (isFixedBillType(x)) entry.fixedBills += amt;
+        else entry.regular += amt;
     });
 
-    return Array.from(buckets.values())
-        .map(m => ({ ...m, net: m.revenue - m.expenses }))
-        .sort((a, b) => a.month.localeCompare(b.month));
+    // A month's fixed bills are deducted from the PREVIOUS month's revenue, so make
+    // sure that previous month has a row even if it has no bookings or expenses.
+    Array.from(buckets.keys()).forEach(k => {
+        if (buckets.get(k).fixedBills > 0) bucketFor(prevMonthKey(k));
+    });
+
+    const months = Array.from(buckets.values()).sort((a, b) => a.month.localeCompare(b.month));
+
+    months.forEach(m => {
+        const next = buckets.get(nextMonthKey(m.month));
+        m.fixedBillsNextMonth = next ? next.fixedBills : 0;     // fixed bills deducted FROM this month
+        m.afterFixedBills = m.revenue - m.fixedBillsNextMonth;   // previous-month calc (Rule 3A)
+        m.net = m.revenue - m.regular;                           // current-month profit (Rule 3B)
+        m.totalDeductions = m.regular + m.fixedBillsNextMonth;
+        m.settledNet = m.revenue - m.totalDeductions;
+    });
+
+    return months;
 }
 
 function setProfitFocus(month) {
@@ -897,17 +937,21 @@ function renderMonthlyProfit() {
 
     const months = computeMonthlyProfit();
 
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    };
+    const summaryIds = ['profitPrevRevenue', 'profitFixedBills', 'profitPrevAfterFixed',
+        'profitCurrRevenue', 'profitCurrRegular', 'profitCurrAfterRegular'];
+
     if (!months.length) {
         profitFocusMonth = '';
         const emptyInput = document.getElementById("profitMonthFilter");
         if (emptyInput) emptyInput.value = '';
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No activity recorded yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No activity recorded yet</td></tr>';
         chart.innerHTML = '<div class="profit-chart-empty">No data to chart yet</div>';
-        document.getElementById("profitMonthCount").innerText = '0';
-        document.getElementById("profitTotalRevenue").innerText = '0 PKR';
-        document.getElementById("profitTotalExpenses").innerText = '0 PKR';
-        document.getElementById("profitTotalPending").innerText = '0 PKR';
-        document.getElementById("profitTotalNet").innerText = '0 PKR';
+        summaryIds.forEach(id => setText(id, '0 PKR'));
+        setText('profitPeriodLabel', '');
         return;
     }
 
@@ -915,44 +959,62 @@ function renderMonthlyProfit() {
     const input = document.getElementById("profitMonthFilter");
     if (input && input.value !== profitFocusMonth) input.value = profitFocusMonth;
 
-    const shown = profitFocusMonth ? months.filter(m => m.month === profitFocusMonth) : months;
-    const totals = shown.reduce((acc, m) => ({
-        revenue: acc.revenue + m.revenue,
-        expenses: acc.expenses + m.expenses,
-        pending: acc.pending + m.pending,
-        net: acc.net + m.net
-    }), { revenue: 0, expenses: 0, pending: 0, net: 0 });
+    // The reported period is the focused month, or the real current calendar month.
+    const now = new Date();
+    const currentMonth = profitFocusMonth || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+    const previousMonth = prevMonthKey(currentMonth);
 
-    document.getElementById("profitMonthCount").innerText = shown.length;
-    document.getElementById("profitTotalRevenue").innerText = formatPKR(totals.revenue);
-    document.getElementById("profitTotalExpenses").innerText = formatPKR(totals.expenses);
-    document.getElementById("profitTotalPending").innerText = formatPKR(totals.pending);
-    document.getElementById("profitTotalNet").innerText = formatPKR(totals.net);
+    const statOf = (key) => months.find(m => m.month === key) || { revenue: 0, pending: 0, fixedBills: 0, regular: 0, bookings: 0 };
+    const currStats = statOf(currentMonth);
+    const prevStats = statOf(previousMonth);
+
+    // Rule 5 — dashboard figures.
+    const prevRevenue = prevStats.revenue;
+    const fixedBillsThisMonth = currStats.fixedBills;      // rent + electric + internet paid this month
+    const prevAfterFixed = prevRevenue - fixedBillsThisMonth;
+    const currRevenue = currStats.revenue;
+    const currRegular = currStats.regular;
+    const currAfterRegular = currRevenue - currRegular;
+
+    setText('profitPeriodLabel', monthLabel(previousMonth) + '  \u2192  ' + monthLabel(currentMonth));
+    setText('labelPrevRevenue', monthLabel(previousMonth) + ' Revenue');
+    setText('labelFixedBills', 'Fixed Bills Paid in ' + monthLabel(currentMonth));
+    setText('labelPrevAfterFixed', monthLabel(previousMonth) + ' After Fixed Bills');
+    setText('labelCurrRevenue', monthLabel(currentMonth) + ' Revenue');
+    setText('labelCurrRegular', monthLabel(currentMonth) + ' Regular Expenses');
+    setText('labelCurrAfterRegular', monthLabel(currentMonth) + ' After Regular Expenses');
+
+    setText('profitPrevRevenue', formatPKR(prevRevenue));
+    setText('profitFixedBills', formatPKR(fixedBillsThisMonth));
+    setText('profitPrevAfterFixed', formatPKR(prevAfterFixed));
+    setText('profitCurrRevenue', formatPKR(currRevenue));
+    setText('profitCurrRegular', formatPKR(currRegular));
+    setText('profitCurrAfterRegular', formatPKR(currAfterRegular));
 
     tbody.innerHTML = months.map(m => {
-        const margin = m.revenue > 0 ? Math.round((m.net / m.revenue) * 100) : 0;
         const active = m.month === profitFocusMonth ? ' class="row-active"' : '';
         return '<tr' + active + ' data-month="' + m.month + '" onclick="toggleProfitFocus(\'' + m.month + '\')">' +
             '<td data-label="Month"><span class="cell-main">' + monthLabel(m.month) + '<span class="cell-sub">' + m.month + '</span></span></td>' +
             '<td data-label="Bookings">' + m.bookings + '</td>' +
             '<td data-label="Revenue">' + formatPKR(m.revenue) + '</td>' +
-            '<td data-label="Expenses">' + formatPKR(m.expenses) + '</td>' +
-            '<td data-label="Pending">' + formatPKR(m.pending) + '</td>' +
+            '<td data-label="Fixed Bills (Next Month)">' + formatPKR(m.fixedBillsNextMonth) + '</td>' +
+            '<td data-label="After Fixed Bills"><span class="val-' + (m.afterFixedBills >= 0 ? 'gain' : 'loss') + '">' + formatPKR(m.afterFixedBills) + '</span></td>' +
+            '<td data-label="Regular Expenses">' + formatPKR(m.regular) + '</td>' +
             '<td data-label="Net Profit"><span class="val-' + (m.net >= 0 ? 'gain' : 'loss') + '">' + formatPKR(m.net) + '</span></td>' +
-            '<td data-label="Margin"><span class="val-' + (m.net >= 0 ? 'gain' : 'loss') + '">' + margin + '%</span></td>' +
+            '<td data-label="Pending">' + formatPKR(m.pending) + '</td>' +
             '</tr>';
     }).join('');
 
-    const maxValue = Math.max(1, ...months.map(m => Math.max(m.revenue, m.expenses)));
+    const maxValue = Math.max(1, ...months.map(m => Math.max(m.revenue, m.totalDeductions)));
     chart.innerHTML = months.map(m => {
         const active = m.month === profitFocusMonth ? ' is-active' : '';
         return '<button type="button" class="profit-col' + active + '" onclick="toggleProfitFocus(\'' + m.month + '\')" title="' + m.month + '">' +
             '<span class="profit-col-bars">' +
-                '<span class="profit-bar bar-revenue" style="height:' + Math.round((m.revenue / maxValue) * 100) + '%"></span>' +
-                '<span class="profit-bar bar-expense" style="height:' + Math.round((m.expenses / maxValue) * 100) + '%"></span>' +
+                '<span class="profit-bar bar-revenue" title="Revenue ' + formatPKR(m.revenue) + '" style="height:' + Math.round((m.revenue / maxValue) * 100) + '%"></span>' +
+                '<span class="profit-bar bar-expense" title="Deductions ' + formatPKR(m.totalDeductions) + '" style="height:' + Math.round((m.totalDeductions / maxValue) * 100) + '%"></span>' +
             '</span>' +
             '<span class="profit-col-label">' + monthLabel(m.month) + '</span>' +
-            '<span class="profit-col-net val-' + (m.net >= 0 ? 'gain' : 'loss') + '">' + (m.net >= 0 ? '+' : '-') + formatPKR(Math.abs(m.net)).replace(' PKR', '') + '</span>' +
+            '<span class="profit-col-net val-' + (m.settledNet >= 0 ? 'gain' : 'loss') + '">' + (m.settledNet >= 0 ? '+' : '-') + formatPKR(Math.abs(m.settledNet)).replace(' PKR', '') + '</span>' +
             '</button>';
     }).join('');
 }
