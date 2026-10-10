@@ -7,6 +7,9 @@
  *   Read-only report:
  *     $env:MONGO_URI="<paste from Render>"; node recover_admin.js
  *
+ *   Show the actual booking records:
+ *     $env:MONGO_URI="<paste from Render>"; node recover_admin.js --bookings
+ *
  *   Create or reset an admin account, and re-claim owner-less records:
  *     $env:MONGO_URI="<paste from Render>"; node recover_admin.js <username> <password>
  *
@@ -65,7 +68,25 @@ async function main() {
         }
     }
 
-    const [username, password] = process.argv.slice(2);
+    const positional = process.argv.slice(2).filter(a => !a.startsWith('--'));
+    const [username, password] = positional;
+
+    if (process.argv.includes('--bookings')) {
+        const rows = await Booking.find({}).sort({ booking_number: 1 }).limit(200).lean();
+        console.log('\n=== BOOKING RECORDS (first ' + rows.length + ') ===');
+        if (!rows.length) {
+            console.log('  (no bookings in this database at all)');
+        }
+        for (const b of rows) {
+            console.log('  #' + String(b.booking_number === undefined ? '?' : b.booking_number).padEnd(5) +
+                ' ' + String(b.guest_name || b.reference_name || '(no name)').padEnd(24) +
+                ' ' + String(b.booking_type || '').padEnd(14) +
+                ' amount=' + String(b.payment_amount === undefined ? '?' : b.payment_amount).padEnd(10) +
+                ' ' + String(b.payment_status || '').padEnd(10) +
+                ' owner=' + (b.owner ? 'yes' : 'UNASSIGNED'));
+        }
+    }
+
     if (!username || !password) {
         console.log('\n(Read-only mode. Pass a username and password to create or reset an admin.)');
         return;
