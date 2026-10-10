@@ -48,7 +48,7 @@ There is no `dotenv` dependency — env vars must come from the shell or the hos
 - Everything under `/api/admin/*` requires an admin token.
 
 ## Architecture
-- `server.js` — all API routes, DB init, static serving. Exports `app`, `startServer`, `connectDb`, `initSystem`, `nextBookingNumber`, `claimOrphanedRecords`, and the models so tests can drive it in-process; `startServer()` only runs under `require.main === module`.
+- `server.js` — all API routes, DB init, static serving. Exports `app`, `startServer`, `connectDb`, `initSystem`, `nextBookingNumber`, `claimOrphanedRecords`, and the models so tests can drive it in-process; `startServer()` only runs under `require.main === module`. `GET /api/export` returns a per-owner ZIP with `data.json`, `bookings.csv`, `bookings-summary.csv` (monthly bookings/revenue/pending) and `profit-breakdown.csv`; its `computeProfitBreakdown()` mirrors the client's `computeMonthlyProfit()` and the two must stay in sync.
 - `public/index.html` — SPA dashboard with a monthly-profit section, plus modals for bookings, expenses, investments, monthly bills, settings, and admin management
 - `public/script.js` — all client logic. `checkAndApplyMonthlyBills()` backfills auto monthly bills for every month from the account's first record through the current month, deduped by `bill_type` + `bill_month` (so it no longer only fires on the 1st and no longer relies on localStorage)
 - `public/style.css` — all styles including toast notifications, filter UI, profit chart, auth/admin UI, and the mobile card-table layout

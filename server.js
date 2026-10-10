@@ -161,6 +161,83 @@ function nowStamp() {
     return new Date().toISOString();
 }
 
+const FIXED_BILL_TYPES = ['Rent', 'Electric', 'Internet'];
+
+function toMonthKey(value) {
+    const m = String(value || '').match(/^(\d{4})-(\d{2})/);
+    return m ? m[1] + '-' + m[2] : '';
+}
+
+function prevMonthKey(key) {
+    const parts = String(key || '').split('-');
+    if (parts.length !== 2) return '';
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 2, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function nextMonthKey(key) {
+    const parts = String(key || '').split('-');
+    if (parts.length !== 2) return '';
+    const d = new Date(Number(parts[0]), Number(parts[1]), 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+// Mirrors computeMonthlyProfit() in public/script.js. Keep the two in sync:
+// fixed bills (Rent/Electric/Internet) bucket by bill_month and are deducted
+// from the PREVIOUS month's revenue; all other expenses deduct from their own month.
+function computeProfitBreakdown(bookings, expenses) {
+    const buckets = new Map();
+    const bucketFor = (key) => {
+        if (!buckets.has(key)) buckets.set(key, { month: key, bookings: 0, revenue: 0, pending: 0, fixedBills: 0, regular: 0 });
+        return buckets.get(key);
+    };
+
+    bookings.forEach(b => {
+        const key = toMonthKey(b.check_in_date || b.created_at);
+        if (!key) return;
+        const entry = bucketFor(key);
+        const amt = Number(b.payment_amount || 0) || 0;
+        entry.bookings += 1;
+        if ((b.payment_status || 'Paid') === 'Pending') entry.pending += amt;
+        else entry.revenue += amt;
+    });
+
+    expenses.forEach(x => {
+        const key = toMonthKey(x.bill_month || x.expense_date || x.created_at);
+        if (!key) return;
+        const entry = bucketFor(key);
+        const amt = Number(x.amount || 0) || 0;
+        if (FIXED_BILL_TYPES.indexOf(x.bill_type) !== -1) entry.fixedBills += amt;
+        else entry.regular += amt;
+    });
+
+    Array.from(buckets.keys()).forEach(k => {
+        if (buckets.get(k).fixedBills > 0) bucketFor(prevMonthKey(k));
+    });
+
+    const months = Array.from(buckets.values()).sort((a, b) => a.month.localeCompare(b.month));
+    months.forEach(m => {
+        const next = buckets.get(nextMonthKey(m.month));
+        m.fixedBillsNextMonth = next ? next.fixedBills : 0;
+        m.afterFixedBills = m.revenue - m.fixedBillsNextMonth;
+        m.net = m.revenue - m.regular;
+        m.totalDeductions = m.regular + m.fixedBillsNextMonth;
+        m.settledNet = m.revenue - m.totalDeductions;
+    });
+
+    return months;
+}
+
+function csvCell(value) {
+    if (value === undefined || value === null) return '';
+    const s = String(value);
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function toCsv(rows) {
+    return rows.map(row => row.map(csvCell).join(',')).join('\r\n') + '\r\n';
+}
+
 function sanitizeUsername(raw) {
     return String(raw || '').trim().toLowerCase();
 }
@@ -803,6 +880,26 @@ app.get('/api/export', authMiddleware, async (req, res) => {
             monthlyConfig: monthlyConfig || { rent: 0, electric: 0, internet: 0 }
         };
         archive.append(JSON.stringify(data, null, 2), { name: 'data.json' });
+
+        const bookingRows = [['Booking #', 'Guest', 'Reference', 'Reference Contact', 'Room', 'Check-in', 'Check-out', 'Type', 'Amount', 'Status', 'Created At']];
+        bookings.forEach(b => bookingRows.push([
+            b.booking_number || '', b.guest_name || '', b.reference_name || '', b.reference_contact || '',
+            b.roomNumber || '', b.check_in_date || '', b.checkOutDate || '', b.bookingType || '',
+            b.payment_amount || 0, b.payment_status || 'Paid', b.created_at || ''
+        ]));
+        archive.append(toCsv(bookingRows), { name: 'bookings.csv' });
+
+        const breakdown = computeProfitBreakdown(bookings, expenses);
+
+        const summaryRows = [['Month', 'Bookings', 'Revenue', 'Pending']];
+        breakdown.forEach(m => summaryRows.push([m.month, m.bookings, m.revenue, m.pending]));
+        archive.append(toCsv(summaryRows), { name: 'bookings-summary.csv' });
+
+        const profitRows = [['Month', 'Bookings', 'Revenue', 'Fixed Bills (Next Month)', 'After Fixed Bills', 'Regular Expenses', 'Net Profit', 'Pending']];
+        breakdown.forEach(m => profitRows.push([
+            m.month, m.bookings, m.revenue, m.fixedBillsNextMonth, m.afterFixedBills, m.regular, m.net, m.pending
+        ]));
+        archive.append(toCsv(profitRows), { name: 'profit-breakdown.csv' });
 
         await archive.finalize();
         await done;
