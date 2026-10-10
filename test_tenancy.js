@@ -41,7 +41,7 @@ function section(title) {
     process.env.MONGO_URI = mongo.getUri('veyr_test');
 
     const server = require('./server.js');
-    const { app, connectDb, initSystem, claimOrphanedRecords, models } = server;
+    const { app, connectDb, initSystem, claimOrphanedRecords, models, validateCredentials, defaults } = server;
 
     await connectDb();
 
@@ -73,6 +73,18 @@ function section(title) {
     section('Bootstrap');
     check('first admin account created', await models.User.countDocuments({ username: 'rootadmin' }) === 1);
     check('that account is an admin', (await models.User.findOne({ username: 'rootadmin' }).lean()).is_admin === true);
+
+    section('Shipped default admin credentials are usable');
+    // Regression guard: the defaults in server.js once failed the minimum length
+    // check, so the bootstrap threw and NO admin existed. Every login then failed
+    // with "Invalid username or password" and the cause was invisible.
+    check('default admin username passes validation',
+        validateCredentials(defaults.adminUsername, defaults.adminPassword) === null,
+        validateCredentials(defaults.adminUsername, defaults.adminPassword));
+    check('default admin password meets the minimum length',
+        defaults.adminPassword.length >= defaults.minPasswordLength,
+        { length: defaults.adminPassword.length, required: defaults.minPasswordLength });
+    check('default admin username is not the display name', defaults.adminUsername !== defaults.adminPropertyName);
 
     section('Admin login');
     const badLogin = await api.post('/api/auth/login', { username: 'rootadmin', password: 'wrong' });

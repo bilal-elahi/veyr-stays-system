@@ -22,6 +22,12 @@ else console.log('Cloudinary not configured — images stored as base64 in Mongo
 const TOKEN_TTL = process.env.TOKEN_TTL || '7d';
 const BCRYPT_ROUNDS = 12;
 const MIN_PASSWORD_LENGTH = 6;
+// First-boot admin defaults. These MUST satisfy validateCredentials, otherwise
+// the bootstrap throws and nobody can ever log in. Keep them in sync with the
+// assertion in test_tenancy.js.
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_PASSWORD = 'changeme123';
+const DEFAULT_ADMIN_PROPERTY_NAME = 'Veyr Stays';
 // A real bcrypt hash of a value nobody can supply; comparing against it keeps the
 // "unknown username" login path as slow as the "wrong password" one.
 const DUMMY_HASH = '$2b$12$mi5IyPfBtUc43G4zzH7oxuZm1403/UXQ0h7n12nqVtFhaBRL/MSg.';
@@ -286,8 +292,8 @@ async function claimOrphanedRecords(ownerId) {
 async function initSystem() {
     const existingUsers = await User.countDocuments();
     if (existingUsers === 0) {
-        const username = sanitizeUsername(process.env.ADMIN_USERNAME || 'admin');
-        const password = process.env.ADMIN_PASSWORD || '7583';
+        const username = sanitizeUsername(process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME);
+        const password = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
         const usernameProblem = validateCredentials(username, password);
         if (usernameProblem) {
             console.log('--------------------------------------------');
@@ -300,7 +306,7 @@ async function initSystem() {
         const admin = await User.create({
             username,
             password_hash: await bcrypt.hash(password, BCRYPT_ROUNDS),
-            property_name: process.env.ADMIN_PROPERTY_NAME || 'Veyr Stays',
+            property_name: process.env.ADMIN_PROPERTY_NAME || DEFAULT_ADMIN_PROPERTY_NAME,
             is_admin: true,
             is_active: true,
             created_at: today()
@@ -819,5 +825,12 @@ module.exports = {
     initSystem,
     nextBookingNumber,
     claimOrphanedRecords,
+    validateCredentials,
+    defaults: {
+        adminUsername: DEFAULT_ADMIN_USERNAME,
+        adminPassword: DEFAULT_ADMIN_PASSWORD,
+        adminPropertyName: DEFAULT_ADMIN_PROPERTY_NAME,
+        minPasswordLength: MIN_PASSWORD_LENGTH
+    },
     models: { User, PasswordReset, Booking, Expense, Investment, MonthlyConfig, Counter, SystemSetting }
 };

@@ -22,9 +22,9 @@ npm test                # Multi-tenant isolation suite (95 assertions, in-memory
 | `MONGO_URI` | `mongodb://localhost:27017/veyr_stays` | |
 | `JWT_SECRET` | generated once and stored in the `systemsettings` collection | Set it explicitly in production. |
 | `TOKEN_TTL` | `7d` | JWT lifetime. |
-| `ADMIN_USERNAME` | `admin` | First boot only. Must match `/^[a-z0-9._-]{3,32}$/` or boot fails. |
-| `ADMIN_PASSWORD` | `7583` | First boot only. Minimum 6 characters. |
-| `ADMIN_PROPERTY_NAME` | `Veyr Stays` | First boot only. |
+| `ADMIN_USERNAME` | `admin` | First boot only. Must match `/^[a-z0-9._-]{3,32}$/` or boot fails. Never use the display name (it contains a space). |
+| `ADMIN_PASSWORD` | `changeme123` | First boot only. Minimum 6 characters — the default **must** satisfy this or the bootstrap throws and no account is created. |
+| `ADMIN_PROPERTY_NAME` | `Veyr Stays` | First boot only. Display name only; not used as a username. |
 | `LOGIN_RATE_MAX` | `10` | Per IP, per 10 minutes. |
 | `REGISTER_RATE_MAX` | `5` | Per IP, per hour. |
 | `FORGOT_RATE_MAX` | `5` | Per IP, per hour. |
@@ -36,6 +36,7 @@ There is no `dotenv` dependency — env vars must come from the shell or the hos
 - `users` is the tenant table. `bookings`, `expenses`, `investments`, and `monthlyconfigs` all carry `owner` (ObjectId → `User`) and are filtered by it in **every** query.
 - `counters` holds the per-owner booking sequence; `nextBookingNumber()` is the only allocator. New accounts both start at #1.
 - First boot creates the admin and then claims any pre-multi-tenant records that have no `owner` via `claimOrphanedRecords()`. That safety net also runs on later boots.
+- If `initSystem()` throws, the server still starts and serves the UI, but there is no admin — every login returns "Invalid username or password". `startServer()` now logs this distinction explicitly. The old pre-multi-tenant build had no `users` collection at all (it compared `/api/login` against env vars), so upgrading never destroys data; existing records simply get claimed on first boot.
 - Cloudinary uploads go to a per-owner folder so deleting an account cannot touch another tenant's images.
 - Deleting a user cascades to their records; deactivation blocks new logins **and** invalidates already-issued tokens (the auth middleware re-reads the user on every request).
 
