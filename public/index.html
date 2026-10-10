@@ -61,12 +61,12 @@
         <div class="controls" id="controls">
         <div class="action-bar">
             <button id="openBookingModal" class="btn-primary">+ Add Booking</button>
-            <button id="openBillModal" class="btn-secondary btn-dark">+ Add Bill</button>
+            <button id="openBillModal" class="btn-secondary">+ Add Bill</button>
             <button id="openFinanceModal" class="btn-secondary">+ Expense / Investment</button>
-            <button id="exportBtn" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Download</button>
-            <button id="refreshBtn" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Refresh</button>
-            <button id="openAdminModal" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff;display:none">Admin</button>
-            <button id="openConfigModal" class="btn-secondary" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);color:#fff">Settings</button>
+            <button id="exportBtn" class="btn-secondary">Download</button>
+            <button id="refreshBtn" class="btn-secondary">Refresh</button>
+            <button id="openAdminModal" class="btn-secondary" style="display:none">Admin</button>
+            <button id="openConfigModal" class="btn-secondary">Settings</button>
         </div>
 
         <div class="view-bar" id="viewBar">
@@ -79,46 +79,109 @@
 
         <div class="main-content">
         <div id="view-summary" class="app-view">
-        <!-- Dashboard Metrics Summary -->
+        <!-- Dashboard hero: welcome + current date -->
+        <section class="dash-hero">
+            <div class="dash-hero-text">
+                <p class="dash-eyebrow" id="dashGreeting">Welcome back</p>
+                <h1 class="dash-title" id="dashPropertyTitle">Dashboard</h1>
+                <p class="dash-subtitle" id="dashSubtitle">Your property at a glance</p>
+            </div>
+            <div class="dash-hero-meta">
+                <span class="dash-date-label">Today</span>
+                <span class="dash-date" id="dashDate">&mdash;</span>
+            </div>
+        </section>
+
+        <!-- Financial Summary Cards -->
         <section class="metrics-grid">
-            <div class="metric-card accent-primary" id="totalBookingsCard" style="cursor:pointer" title="Click to show all bookings">
+            <div class="metric-card accent-primary">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </span>
+                <h3>Current Month Revenue</h3>
+                <p id="dashCurrentRevenue">0 PKR</p>
+                <span class="metric-sub" id="dashCurrentRevenueLabel"></span>
+            </div>
+            <div class="metric-card accent-success">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                </span>
+                <h3>Previous Month Revenue</h3>
+                <p id="dashPrevRevenue">0 PKR</p>
+                <span class="metric-sub" id="dashPrevRevenueLabel"></span>
+            </div>
+            <div class="metric-card accent-warning">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </span>
+                <h3>Total Expenses</h3>
+                <p id="totalExpenses">0 PKR</p>
+                <span class="metric-sub">All time (incl. auto bills)</span>
+            </div>
+            <div class="metric-card accent-primary">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
+                </span>
+                <h3>Net Profit</h3>
+                <p id="netProfit">0 PKR</p>
+                <span class="metric-sub">All time</span>
+            </div>
+            <div class="metric-card" id="totalBookingsCard" style="cursor:pointer" title="Click to show all bookings">
                 <h3>Total Bookings</h3>
                 <p id="totalBookings">0</p>
+                <span class="metric-sub">Tap to view bookings</span>
             </div>
             <div class="metric-card">
                 <h3>Total Revenue</h3>
                 <p id="totalRevenue">0 PKR</p>
+                <span class="metric-sub">All time</span>
             </div>
             <div class="metric-card accent-warning" id="pendingRevenueCard" style="cursor:pointer" title="Click to show/hide pending bookings">
                 <h3>Pending Revenue</h3>
                 <p id="pendingRevenue">0 PKR</p>
-            </div>
-            <div class="metric-card">
-                <h3>Total Expenses (Incl. Auto Bills)</h3>
-                <p id="totalExpenses">0 PKR</p>
+                <span class="metric-sub">Tap to filter pending</span>
             </div>
             <div class="metric-card">
                 <h3>Total Investments</h3>
                 <p id="totalInvestments">0 PKR</p>
-            </div>
-            <div class="metric-card accent-primary">
-                <h3>Net Profit</h3>
-                <p id="netProfit">0 PKR</p>
+                <span class="metric-sub">All time</span>
             </div>
         </section>
+
+        <!-- Monthly Revenue & Profit + Expense Breakdown -->
+        <div class="dash-grid">
+            <section class="card-section" id="overviewSection">
+                <div class="section-header">
+                    <h2>Monthly Revenue &amp; Profit</h2>
+                    <div class="filter-group">
+                        <label class="filter-label" for="profitMonthFilter">Month</label>
+                        <input type="month" id="profitMonthFilter" class="filter-input">
+                        <button id="clearProfitFocusBtn" class="btn-secondary btn-sm" type="button">All</button>
+                    </div>
+                </div>
+                <p class="profit-period" id="profitPeriodLabel"></p>
+                <div class="profit-chart" id="profitChart"></div>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-swatch bar-revenue"></span>Revenue</span>
+                    <span class="legend-item"><span class="legend-swatch bar-expense"></span>Deductions</span>
+                </div>
+            </section>
+
+            <section class="card-section" id="expenseBreakdownSection">
+                <div class="section-header">
+                    <h2>Expense Breakdown</h2>
+                    <span class="section-badge">All time</span>
+                </div>
+                <div class="expense-breakdown" id="expenseBreakdown"></div>
+            </section>
+        </div>
 
         <!-- Month-wise Profit Breakdown -->
         <section class="card-section" id="profitSection">
             <div class="section-header">
                 <h2>Monthly Profit Breakdown</h2>
-                <div class="filter-group">
-                    <label class="filter-label" for="profitMonthFilter">Month</label>
-                    <input type="month" id="profitMonthFilter" class="filter-input">
-                    <button id="clearProfitFocusBtn" class="btn-secondary btn-sm" type="button">All</button>
-                </div>
             </div>
-            <p class="section-hint">Rent, electricity and internet are <strong>fixed bills</strong>: the ones paid this month are deducted from the <strong>previous</strong> month's revenue. Every other expense is a <strong>regular expense</strong>, deducted from the month it is recorded in. Tap a month below to focus it.</p>
-            <p class="profit-period" id="profitPeriodLabel"></p>
+            <p class="section-hint">Rent, electricity and internet are <strong>fixed bills</strong>: the ones paid this month are deducted from the <strong>previous</strong> month's revenue. Every other expense is a <strong>regular expense</strong>, deducted from the month it is recorded in. Tap a month in the chart to focus it.</p>
             <div class="expense-summary" id="profitSummary">
                 <div class="expense-summary-item">
                     <span class="expense-summary-label" id="labelPrevRevenue">Previous Month Revenue</span>
@@ -145,7 +208,6 @@
                     <span class="expense-summary-value" id="profitCurrAfterRegular">0 PKR</span>
                 </div>
             </div>
-            <div class="profit-chart" id="profitChart"></div>
             <div class="table-wrap">
                 <table class="data-table" id="profitTable">
                     <thead>
@@ -166,6 +228,25 @@
                 </table>
             </div>
         </section>
+
+        <!-- Recent Bookings + Bills & Expenses -->
+        <div class="dash-grid">
+            <section class="card-section" id="recentBookingsSection">
+                <div class="section-header">
+                    <h2>Recent Bookings</h2>
+                    <button type="button" class="btn-secondary btn-sm" data-goto-view="bookings">View all</button>
+                </div>
+                <div class="dash-list" id="recentBookings"></div>
+            </section>
+
+            <section class="card-section" id="billsSection">
+                <div class="section-header">
+                    <h2>Bills &amp; Expenses</h2>
+                    <button type="button" class="btn-secondary btn-sm" data-goto-view="expenses">View all</button>
+                </div>
+                <div class="dash-list" id="upcomingBills"></div>
+            </section>
+        </div>
         </div>
 
         <!-- Bookings Section with Search & Responsive Scroll Wrapper -->

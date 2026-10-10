@@ -138,6 +138,12 @@ function toggleView(name) {
     openView(name);
 }
 
+// Land the user on the dashboard after authenticating. Kept separate from
+// fetchDashboardData so refreshes do not yank the user out of a view they chose.
+function showDashboard() {
+    openView('summary');
+}
+
 async function login(username, password) {
     const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -212,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
             await loadCurrentUser();
             await fetchDashboardData();
             checkAndApplyMonthlyBills();
+            showDashboard();
         } catch (err) {
             setAuthError('Network error: ' + err.message, false);
         } finally {
@@ -250,6 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.scrollTo(0, 0);
             showToast('Account created. Welcome aboard.', 'success');
             await fetchDashboardData();
+            showDashboard();
         } catch (err) {
             setAuthError('Network error: ' + err.message, false);
         } finally {
@@ -300,6 +308,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.addEventListener('click', () => toggleView(btn.dataset.view));
+    });
+
+    document.querySelectorAll('[data-goto-view]').forEach(btn => {
+        btn.addEventListener('click', () => openView(btn.dataset.gotoView));
     });
 
     const profitMonthFilter = document.getElementById("profitMonthFilter");
@@ -401,6 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
             hideLoginOverlay();
             fetchDashboardData();
             checkAndApplyMonthlyBills();
+            showDashboard();
         });
     }
 });
@@ -598,6 +611,7 @@ async function fetchDashboardData() {
         populateFinanceTables(data);
         renderMonthlyProfit();
         calculateMetrics(data);
+        renderDashboard();
     } catch (error) {
         console.error("Error fetching dashboard data:", error);
     }
@@ -831,6 +845,147 @@ function calculateMetrics(data) {
     document.getElementById("totalExpenses").innerText = totalExp.toLocaleString() + " PKR";
     document.getElementById("totalInvestments").innerText = totalInv.toLocaleString() + " PKR";
     document.getElementById("netProfit").innerText = netProf.toLocaleString() + " PKR";
+}
+
+function setDashText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = text;
+}
+
+function renderDashboard() {
+    const now = new Date();
+    const hour = now.getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const displayName = (currentUser && (currentUser.property_name || currentUser.username)) || 'there';
+
+    setDashText('dashGreeting', greeting + ', ' + displayName);
+    setDashText('dashPropertyTitle', (currentUser && currentUser.property_name) || 'Your Dashboard');
+    setDashText('dashSubtitle', 'Here is how your property is performing');
+    setDashText('dashDate', now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+
+    const months = computeMonthlyProfit();
+    const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const previousMonth = prevMonthKey(currentMonth);
+    const statOf = (key) => months.find(m => m.month === key) || { revenue: 0 };
+    setDashText('dashCurrentRevenue', formatPKR(statOf(currentMonth).revenue));
+    setDashText('dashPrevRevenue', formatPKR(statOf(previousMonth).revenue));
+    setDashText('dashCurrentRevenueLabel', monthLabel(currentMonth));
+    setDashText('dashPrevRevenueLabel', monthLabel(previousMonth));
+
+    renderExpenseBreakdown();
+    renderRecentBookings();
+    renderBillsPanel();
+}
+
+function renderExpenseBreakdown() {
+    const el = document.getElementById('expenseBreakdown');
+    if (!el) return;
+
+    const cats = { rent: 0, electric: 0, internet: 0, other: 0 };
+    (allExpensesCache || []).forEach(e => {
+        const c = categorizeExpense(e);
+        cats[c] = (cats[c] || 0) + Number(e.amount || 0);
+    });
+    const total = cats.rent + cats.electric + cats.internet + cats.other;
+    if (!total) {
+        el.innerHTML = '<div class="empty-state">No expenses recorded yet</div>';
+        return;
+    }
+
+    const rows = [
+        { key: 'rent', label: 'Rent', cls: 'cat-rent' },
+        { key: 'electric', label: 'Electric', cls: 'cat-electric' },
+        { key: 'internet', label: 'Internet', cls: 'cat-internet' },
+        { key: 'other', label: 'Other', cls: 'cat-other' }
+    ];
+
+    el.innerHTML = rows.map(r => {
+        const val = cats[r.key] || 0;
+        const pct = Math.round((val / total) * 100);
+        return '<div class="breakdown-row">' +
+            '<div class="breakdown-top">' +
+                '<span class="breakdown-label"><span class="breakdown-dot ' + r.cls + '"></span>' + r.label + '</span>' +
+                '<span class="breakdown-value">' + formatPKR(val) + '</span>' +
+            '</div>' +
+            '<div class="breakdown-track"><span class="breakdown-fill ' + r.cls + '" style="width:' + pct + '%"></span></div>' +
+            '<span class="breakdown-pct">' + pct + '%</span>' +
+        '</div>';
+    }).join('');
+}
+
+function renderRecentBookings() {
+    const el = document.getElementById('recentBookings');
+    if (!el) return;
+
+    const items = (allBookingsCache || []).slice(0, 5);
+    if (!items.length) {
+        el.innerHTML = '<div class="empty-state">No bookings yet</div>';
+        return;
+    }
+
+    el.innerHTML = items.map(b => {
+        const name = b.guest_name || b.guestName || 'Guest';
+        const room = b.roomNumber || 'N/A';
+        const dateStr = String(b.check_in_date || b.checkInDate || b.created_at || '').replace('T', ' ');
+        const status = b.payment_status || 'Paid';
+        const amount = b.payment_amount !== undefined && b.payment_amount !== null ? b.payment_amount : (b.amount || 0);
+        const initial = esc(String(name).trim().charAt(0).toUpperCase() || '?');
+        return '<div class="dash-list-item">' +
+            '<div class="dash-avatar">' + initial + '</div>' +
+            '<div class="dash-list-main">' +
+                '<strong>' + esc(name) + '</strong>' +
+                '<span class="dash-list-sub">Room ' + esc(room) + ' &middot; ' + esc(dateStr) + '</span>' +
+            '</div>' +
+            '<div class="dash-list-side">' +
+                '<span class="badge ' + (status === 'Pending' ? 'badge-pending' : 'badge-paid') + '">' + esc(status) + '</span>' +
+                '<span class="dash-list-amount">' + Number(amount).toLocaleString() + ' PKR</span>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function renderBillsPanel() {
+    const el = document.getElementById('upcomingBills');
+    if (!el) return;
+
+    const config = (allDataCache && allDataCache.monthlyConfig) || {};
+    const parts = [];
+
+    const billDefs = [
+        { label: 'Rent', val: Number(config.rent) || 0 },
+        { label: 'Electric', val: Number(config.electric) || 0 },
+        { label: 'Internet', val: Number(config.internet) || 0 }
+    ].filter(b => b.val > 0);
+
+    if (billDefs.length) {
+        parts.push('<p class="dash-list-title">Monthly auto bills</p>');
+        parts.push(billDefs.map(b =>
+            '<div class="dash-bill-row">' +
+                '<span class="dash-bill-label"><span class="breakdown-dot cat-fixed"></span>' + b.label + '</span>' +
+                '<span class="dash-bill-amount">' + Number(b.val).toLocaleString() + ' PKR</span>' +
+            '</div>'
+        ).join(''));
+    }
+
+    const recent = (allExpensesCache || []).slice(0, 5);
+    parts.push('<p class="dash-list-title">Recent expenses</p>');
+    if (recent.length) {
+        parts.push(recent.map(e => {
+            const title = e.expense_title || e.bill_type || 'Expense';
+            const dateStr = String(e.expense_date || e.date || e.created_at || '');
+            return '<div class="dash-list-item compact">' +
+                '<div class="dash-list-main">' +
+                    '<strong>' + esc(title) + '</strong>' +
+                    '<span class="dash-list-sub">' + esc(dateStr) + '</span>' +
+                '</div>' +
+                '<span class="dash-list-amount">' + Number(e.amount || 0).toLocaleString() + ' PKR</span>' +
+            '</div>';
+        }).join(''));
+    } else {
+        parts.push('<div class="empty-state">No expenses yet</div>');
+    }
+
+    el.innerHTML = parts.join('');
 }
 
 function toMonthKey(value) {
