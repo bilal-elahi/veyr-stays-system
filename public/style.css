@@ -5,49 +5,54 @@
    ========================================================================== */
 
 :root {
-    --primary: #1d4ed8;
-    --primary-dark: #1e3a5f;
-    --primary-darker: #0f2350;
-    --primary-light: #3b82f6;
-    --primary-bg: #e8f0ff;
-    --primary-ring: rgba(29, 78, 216, 0.16);
-    --success: #0f9d6b;
-    --success-bg: #e3f7ef;
-    --warning: #d97706;
-    --warning-bg: #fef3e2;
-    --danger: #e5484d;
-    --danger-bg: #fdeaea;
+    --primary: #c8a24a;
+    --primary-dark: #0b1b2e;
+    --primary-darker: #06101d;
+    --primary-light: #e0be73;
+    --primary-bg: #f7efd9;
+    --primary-ring: rgba(200, 162, 74, 0.30);
+    --success: #1f9d6b;
+    --success-bg: #e4f6ee;
+    --warning: #cf8a2e;
+    --warning-bg: #fbf0dd;
+    --danger: #d84c4c;
+    --danger-bg: #fbecec;
     --gold: #c8a24a;
+    --gold-dark: #a9853a;
+    --gold-light: #e0be73;
+    --navy: #0b1b2e;
+    --navy-deep: #06101d;
+    --navy-2: #142741;
 
-    --ink: #101a2e;
-    --muted: #64748b;
-    --line: #e6ebf4;
+    --ink: #0b1b2e;
+    --muted: #5c6a7a;
+    --line: #e3e7ec;
     --surface: #ffffff;
-    --surface-2: #f6f8fd;
-    --bg: #eef2f9;
+    --surface-2: #f3f5f8;
+    --bg: #edeff2;
 
-    --gray-50: #f6f8fd;
-    --gray-100: #eef2f9;
-    --gray-200: #e2e8f3;
-    --gray-300: #cbd5e6;
-    --gray-400: #94a3bd;
-    --gray-500: #64748b;
-    --gray-600: #475569;
-    --gray-700: #334155;
-    --gray-800: #1e293b;
-    --gray-900: #0f172a;
+    --gray-50: #f5f7f9;
+    --gray-100: #eceef2;
+    --gray-200: #dfe3e9;
+    --gray-300: #c8cfd8;
+    --gray-400: #97a2b0;
+    --gray-500: #5c6a7a;
+    --gray-600: #47535f;
+    --gray-700: #333d47;
+    --gray-800: #1d2938;
+    --gray-900: #0b1b2e;
 
-    --header-bg: #12294d;
-    --header-grad: linear-gradient(135deg, #0e2148 0%, #17376b 55%, #1e4d8c 100%);
+    --header-bg: #0b1b2e;
+    --header-grad: linear-gradient(135deg, #06101d 0%, #0b1b2e 52%, #142741 100%);
 
     --radius: 16px;
     --radius-sm: 10px;
     --radius-xs: 8px;
-    --shadow-sm: 0 1px 2px rgba(16, 26, 46, 0.05);
-    --shadow: 0 2px 8px rgba(16, 26, 46, 0.05);
-    --shadow-md: 0 10px 26px -14px rgba(16, 26, 46, 0.28);
-    --shadow-lg: 0 18px 40px -18px rgba(16, 26, 46, 0.30);
-    --shadow-xl: 0 28px 60px -24px rgba(16, 26, 46, 0.38);
+    --shadow-sm: 0 1px 2px rgba(11, 27, 46, 0.06);
+    --shadow: 0 2px 10px rgba(11, 27, 46, 0.06);
+    --shadow-md: 0 12px 28px -16px rgba(11, 27, 46, 0.34);
+    --shadow-lg: 0 20px 44px -20px rgba(11, 27, 46, 0.36);
+    --shadow-xl: 0 30px 64px -26px rgba(11, 27, 46, 0.44);
     --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2092,4 +2097,152 @@ input:valid:not(:placeholder-shown), select:valid { border-color: var(--success)
         font-size: 0.875rem;
         border-radius: 12px;
     }
+}
+
+/* ==========================================================================
+   Reference theme layer — deep navy shell + off-white content + gold accents
+   Pure visual overrides. No markup, hooks or button behaviour is changed.
+   ========================================================================== */
+
+body {
+    background-image:
+        radial-gradient(1200px 560px at 100% -12%, rgba(200, 162, 74, 0.10), transparent 60%),
+        radial-gradient(900px 500px at -10% 0%, rgba(11, 27, 46, 0.07), transparent 55%);
+}
+
+/* Dark shell: header + action bar + view bar */
+.app-header {
+    background: var(--header-grad);
+    border-bottom: 1px solid rgba(200, 162, 74, 0.30);
+}
+
+.action-bar {
+    background: #0c1c30;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.view-bar {
+    background: #0a1729;
+    border-bottom: 1px solid rgba(200, 162, 74, 0.30);
+}
+
+.app-property {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+/* Secondary buttons sit on the dark bar */
+.action-bar .btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e7ecf3;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.action-bar .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Gold primary action */
+.btn-primary {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    color: #0b1b2e;
+    box-shadow: 0 10px 22px -12px rgba(200, 162, 74, 0.85);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #eacb82, var(--gold-light));
+    color: #0b1b2e;
+    box-shadow: 0 14px 26px -12px rgba(200, 162, 74, 0.90);
+}
+
+.btn-primary:active {
+    background: var(--gold-dark);
+    color: #0b1b2e;
+}
+
+/* View switcher pills on the dark bar */
+.view-bar .view-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.view-bar .view-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.view-bar .view-btn.is-active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0b1b2e;
+    box-shadow: 0 8px 18px -10px rgba(200, 162, 74, 0.90);
+}
+
+/* Hero */
+.dash-hero {
+    background: var(--header-grad);
+    box-shadow: var(--shadow-lg);
+}
+
+.dash-hero::after {
+    background: radial-gradient(circle, rgba(200, 162, 74, 0.22), transparent 68%);
+}
+
+.dash-eyebrow {
+    color: var(--gold);
+}
+
+/* Metric cards keep the light surface; gold icon tint on the primary accent */
+.metric-card.accent-primary .metric-icon {
+    background: var(--primary-bg);
+    color: var(--gold-dark);
+}
+
+/* Gold-tinted section badge */
+.section-badge {
+    background: rgba(200, 162, 74, 0.14);
+    border-color: rgba(200, 162, 74, 0.34);
+    color: var(--gold-dark);
+}
+
+/* Charts: gold revenue, steel-navy deductions */
+.bar-revenue {
+    background: linear-gradient(180deg, var(--gold-light), var(--gold));
+}
+
+.bar-expense {
+    background: linear-gradient(180deg, #6b7f93, #34495e);
+}
+
+.profit-col.is-active {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+/* Links in content areas need darker gold for contrast on white */
+.data-table a {
+    color: var(--gold-dark);
+}
+
+.data-table a:hover {
+    color: var(--navy);
+}
+
+.auth-link {
+    color: var(--gold-dark);
+}
+
+/* Info toast readable on gold */
+.toast-info {
+    background: var(--gold);
+    color: #0b1b2e;
+}
+
+/* Avatar chip */
+.dash-avatar {
+    color: #0b1b2e;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    box-shadow: 0 6px 14px -10px rgba(200, 162, 74, 0.90);
 }
