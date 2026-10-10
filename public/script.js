@@ -114,12 +114,14 @@ function applyCurrentUser(user) {
 function closeAllViews() {
     document.querySelectorAll('.app-view').forEach(v => v.classList.remove('is-open'));
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('is-active'));
+    document.body.classList.add('landing-mode');
 }
 
 function openView(name) {
     const target = document.getElementById('view-' + name);
     if (!target) return;
     closeAllViews();
+    document.body.classList.remove('landing-mode');
     target.classList.add('is-open');
     const btn = document.querySelector('.view-btn[data-view="' + name + '"]');
     if (btn) btn.classList.add('is-active');
@@ -181,6 +183,7 @@ async function loadCurrentUser() {
 
 document.addEventListener("DOMContentLoaded", () => {
     if (!getToken()) showLoginOverlay();
+    document.body.classList.add('landing-mode');
 
     document.querySelectorAll('.auth-tab').forEach(btn => {
         btn.addEventListener('click', () => setAuthTab(btn.dataset.authTab));
@@ -436,35 +439,76 @@ async function checkAndApplyMonthlyBills() {
 
         if (!config || (!config.rent && !config.electric && !config.internet)) return;
 
+        const billTypes = [
+            { type: 'Rent', amount: Number(config.rent) || 0, title: 'Rent - Automated Monthly Rent' },
+            { type: 'Electric', amount: Number(config.electric) || 0, title: 'Electric Bill - Automated Monthly Electricity' },
+            { type: 'Internet', amount: Number(config.internet) || 0, title: 'Internet Bill - Automated Monthly Internet' }
+        ].filter(t => t.amount > 0);
+
+        if (!billTypes.length) return;
+
         const now = new Date();
-        const currentYearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-        const lastApplied = localStorage.getItem("veyr_last_applied_month");
+        const keyOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        const currentKey = keyOf(now);
 
-        if (now.getDate() === 1 && lastApplied !== currentYearMonth) {
-            const dateStr = currentYearMonth + '-01';
+        // Bills are owed for every month from the first month this account has any
+        // record in, up to and including the current month. Rent is paid upfront,
+        // so we must not wait for the 1st to create a month's bills.
+        const presentMonths = [currentKey];
+        (data.bookings || []).forEach(b => {
+            const k = toMonthKey(b.check_in_date || b.checkInDate || b.created_at);
+            if (k) presentMonths.push(k);
+        });
+        (data.expenses || []).forEach(x => {
+            const k = toMonthKey(x.bill_month || x.expense_date || x.date || x.created_at);
+            if (k) presentMonths.push(k);
+        });
+        presentMonths.sort();
+        let startKey = presentMonths[0];
 
-            const autoBills = [
-                { expense_title: "Rent - Automated Monthly Rent", amount: config.rent, expense_date: dateStr, bill_type: "Rent", bill_month: currentYearMonth },
-                { expense_title: "Electric Bill - Automated Monthly Electricity", amount: config.electric, expense_date: dateStr, bill_type: "Electric", bill_month: currentYearMonth },
-                { expense_title: "Internet Bill - Automated Monthly Internet", amount: config.internet, expense_date: dateStr, bill_type: "Internet", bill_month: currentYearMonth }
-            ];
+        // Never backfill further than a couple of years, even if the oldest record is ancient.
+        const MAX_BACKFILL_MONTHS = 36;
+        const floor = new Date(now.getFullYear(), now.getMonth() - (MAX_BACKFILL_MONTHS - 1), 1);
+        if (startKey < keyOf(floor)) startKey = keyOf(floor);
 
-            let applied = 0;
-            for (const bill of autoBills) {
-                if (!(bill.amount > 0)) continue;
+        // Skip any month/type we already have a bill for (auto OR manual).
+        const existing = new Set();
+        (data.expenses || []).forEach(x => {
+            if (!x.bill_type) return;
+            const k = toMonthKey(x.bill_month || x.expense_date);
+            if (k) existing.add(x.bill_type + '|' + k);
+        });
+
+        const targets = [];
+        const cursor = new Date(Number(startKey.slice(0, 4)), Number(startKey.slice(5, 7)) - 1, 1);
+        const end = new Date(now.getFullYear(), now.getMonth(), 1);
+        while (cursor <= end) {
+            targets.push(keyOf(cursor));
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+
+        let applied = 0;
+        for (const month of targets) {
+            for (const bill of billTypes) {
+                if (existing.has(bill.type + '|' + month)) continue;
                 const billRes = await apiFetch('/api/expenses', {
                     method: 'POST',
-                    body: JSON.stringify(bill)
+                    body: JSON.stringify({
+                        expense_title: bill.title,
+                        amount: bill.amount,
+                        expense_date: month + '-01',
+                        bill_type: bill.type,
+                        bill_month: month
+                    })
                 }).catch(() => null);
                 const billJson = billRes ? await billRes.json().catch(() => ({})) : {};
-                if (billJson.success) applied++;
+                if (billJson.success) { applied++; existing.add(bill.type + '|' + month); }
             }
+        }
 
-            if (applied > 0) {
-                localStorage.setItem("veyr_last_applied_month", currentYearMonth);
-                showToast(applied + ' monthly bill(s) auto-created', 'success');
-                await fetchDashboardData();
-            }
+        if (applied > 0) {
+            showToast(applied + ' monthly bill(s) added', 'success');
+            await fetchDashboardData();
         }
     } catch (err) {
         console.error("Error auto-applying monthly bills:", err);
@@ -1285,6 +1329,7 @@ async function handleConfigSubmit(e) {
             if (allDataCache) allDataCache.monthlyConfig = payload;
             showToast('Monthly bills saved', 'success');
             await fetchDashboardData();
+            checkAndApplyMonthlyBills();
         } else {
             showToast(result.error || 'Failed to save settings', 'error');
         }

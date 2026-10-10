@@ -122,10 +122,11 @@ body {
 
 /* ------------------------------- auth screen ------------------------------- */
 
-.auth-overlay {
+.modal.auth-overlay {
     background: rgba(18, 28, 48, 0.85);
     z-index: 10000;
     align-items: center;
+    justify-content: center;
     padding: 1rem;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -463,6 +464,80 @@ body {
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
+}
+
+/* ------------------------------ landing mode ------------------------------ */
+/* With no section open the app shows only the brand and big buttons: the logo
+   fills the upper half, the controls fill the lower half. */
+
+.controls {
+    display: block;
+}
+
+body.landing-mode .app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(160deg, var(--header-bg), #1e4d8c);
+}
+
+body.landing-mode .app-header {
+    flex: 1 1 50%;
+    min-height: 34vh;
+    padding: 28px 16px;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.landing-mode .app-logo {
+    width: 120px;
+    height: 120px;
+}
+
+body.landing-mode .app-brand-text {
+    font-size: 1.9rem;
+}
+
+body.landing-mode .app-property {
+    font-size: 0.95rem;
+    max-width: 82vw;
+}
+
+body.landing-mode .controls {
+    display: flex;
+    flex: 1 1 50%;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+}
+
+body.landing-mode .action-bar,
+body.landing-mode .view-bar {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    justify-content: center;
+}
+
+body.landing-mode .action-bar > button,
+body.landing-mode .view-bar .view-btn {
+    flex: 1 1 44%;
+    min-height: 60px;
+    padding: 16px;
+    font-size: 1rem;
+    border-radius: 14px;
+}
+
+body.landing-mode .view-bar .view-btn {
+    background: #fff;
+    border-color: transparent;
+    color: var(--primary-dark);
+}
+
+body.landing-mode .main-content {
+    display: none;
 }
 
 .main-content {

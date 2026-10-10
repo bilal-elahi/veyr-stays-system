@@ -50,7 +50,7 @@ There is no `dotenv` dependency — env vars must come from the shell or the hos
 ## Architecture
 - `server.js` — all API routes, DB init, static serving. Exports `app`, `startServer`, `connectDb`, `initSystem`, `nextBookingNumber`, `claimOrphanedRecords`, and the models so tests can drive it in-process; `startServer()` only runs under `require.main === module`.
 - `public/index.html` — SPA dashboard with a monthly-profit section, plus modals for bookings, expenses, investments, monthly bills, settings, and admin management
-- `public/script.js` — all client logic, auto-applies monthly bills on the 1st (uses localStorage to dedupe)
+- `public/script.js` — all client logic. `checkAndApplyMonthlyBills()` backfills auto monthly bills for every month from the account's first record through the current month, deduped by `bill_type` + `bill_month` (so it no longer only fires on the 1st and no longer relies on localStorage)
 - `public/style.css` — all styles including toast notifications, filter UI, profit chart, auth/admin UI, and the mobile card-table layout
 - `test_tenancy.js` — boots the real Express app against `mongodb-memory-server` via supertest; no local MongoDB required
 

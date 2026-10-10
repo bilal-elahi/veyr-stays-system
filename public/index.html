@@ -58,6 +58,7 @@
                 </div>
             </div>
         </header>
+        <div class="controls" id="controls">
         <div class="action-bar">
             <button id="openBookingModal" class="btn-primary">+ Add Booking</button>
             <button id="openBillModal" class="btn-secondary btn-dark">+ Add Bill</button>
@@ -73,6 +74,7 @@
             <button type="button" class="view-btn" data-view="bookings">Bookings</button>
             <button type="button" class="view-btn" data-view="expenses">Expenses</button>
             <button type="button" class="view-btn" data-view="investments">Investments</button>
+        </div>
         </div>
 
         <div class="main-content">
@@ -497,7 +499,7 @@
 
             <form id="configForm">
                 <h3 class="modal-subtitle">Monthly Auto-Bill Settings</h3>
-                <p class="modal-desc">These amounts auto-create bills on the 1st of each month.</p>
+                <p class="modal-desc">These amounts are added as bills for every month, including any month you missed. Rent counts in the month it is paid for.</p>
                 <div class="form-group"><label for="configRent">Rent (PKR)</label><input type="number" id="configRent" min="0"></div>
                 <div class="form-group"><label for="configElectric">Electric Bill (PKR)</label><input type="number" id="configElectric" min="0"></div>
                 <div class="form-group"><label for="configInternet">Internet Bill (PKR)</label><input type="number" id="configInternet" min="0"></div>
