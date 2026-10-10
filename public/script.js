@@ -121,7 +121,7 @@ async function login(username, password) {
     if (data.success) {
         sessionStorage.setItem('veyr_token', data.token);
         applyCurrentUser(data.user);
-        return true;
+        return null;
     }
     return data.error || 'Invalid username or password';
 }
