@@ -41,7 +41,7 @@ function section(title) {
     process.env.MONGO_URI = mongo.getUri('veyr_test');
 
     const server = require('./server.js');
-    const { app, connectDb, initSystem, claimOrphanedRecords, models, validateCredentials, defaults } = server;
+    const { app, connectDb, initSystem, claimOrphanedRecords, models, validateCredentials, defaults, computeProfitBreakdown, fixedBillKind } = server;
 
     await connectDb();
 
@@ -286,6 +286,23 @@ function section(title) {
     check('export succeeded', exportRes.status === 200, exportRes.status);
     check("export does not contain bob's guest", !exportRes.text.includes('Bob Guest'));
     check("export does not contain legacy admin data", !exportRes.text.includes('Legacy Guest'));
+
+    section('Fixed bills are detected by bill_type OR expense title');
+    check('bill_type Rent is fixed', fixedBillKind({ bill_type: 'Rent' }) === 'Rent');
+    check('title "Apartment Rent" is fixed', fixedBillKind({ expense_title: 'Apartment Rent' }) === 'Rent');
+    check('title "Electricity bill" is fixed', fixedBillKind({ expense_title: 'Electricity bill' }) === 'Electric');
+    check('title "Internet" is fixed', fixedBillKind({ expense_title: 'Internet' }) === 'Internet');
+    check('title "Maintenance" is not fixed', fixedBillKind({ expense_title: 'Maintenance' }) === '');
+    check('"Current account fee" is not rent', fixedBillKind({ expense_title: 'Current account fee' }) === '');
+
+    const titleBillBreakdown = computeProfitBreakdown(
+        [{ check_in_date: '2026-04-10', payment_amount: 10000, payment_status: 'Paid' }],
+        [{ expense_title: 'Apartment Rent', amount: 2000, expense_date: '2026-05-03' }]
+    );
+    const april = titleBillBreakdown.find(m => m.month === '2026-04');
+    const may = titleBillBreakdown.find(m => m.month === '2026-05');
+    check('title-only rent is deducted from the previous month', april && april.settledNet === 8000, april);
+    check('the rent month itself carries no regular deduction', may && may.regular === 0, may);
 
     section('Booking number sequence resumes after the legacy claim');
     const newAdminBooking = await api.post('/api/bookings', booking('Admin New', 'Z1', '2026-07-01', 500), adminToken);

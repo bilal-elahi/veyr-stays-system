@@ -487,12 +487,14 @@ async function checkAndApplyMonthlyBills() {
         const floor = new Date(now.getFullYear(), now.getMonth() - (MAX_BACKFILL_MONTHS - 1), 1);
         if (startKey < keyOf(floor)) startKey = keyOf(floor);
 
-        // Skip any month/type we already have a bill for (auto OR manual).
+        // Skip any month/type we already have a bill for (auto OR manual),
+        // whether it carries a bill_type or was typed as an expense title.
         const existing = new Set();
         (data.expenses || []).forEach(x => {
-            if (!x.bill_type) return;
-            const k = toMonthKey(x.bill_month || x.expense_date);
-            if (k) existing.add(x.bill_type + '|' + k);
+            const kind = fixedBillKind(x);
+            if (!kind) return;
+            const k = toMonthKey(x.bill_month || x.expense_date || x.date || x.created_at);
+            if (k) existing.add(kind + '|' + k);
         });
 
         const targets = [];
@@ -717,10 +719,10 @@ function renderBookingsTable(bookings) {
 
 function categorizeExpense(expense) {
     if (expense.bill_type) return expense.bill_type.toLowerCase();
-    const t = (expense.expense_title || '').toLowerCase();
-    if (t.includes('rent')) return 'rent';
-    if (t.includes('electric')) return 'electric';
-    if (t.includes('internet')) return 'internet';
+    const t = (expense.expense_title || expense.category || '').toLowerCase();
+    if (/\brent\b/.test(t)) return 'rent';
+    if (/\belectric(?:ity)?\b/.test(t)) return 'electric';
+    if (/\binternet\b/.test(t)) return 'internet';
     return 'other';
 }
 
@@ -1120,10 +1122,20 @@ function shortNum(value) {
     return String(Math.round(n));
 }
 
-const FIXED_BILL_TYPES = ['Rent', 'Electric', 'Internet'];
+// A fixed bill is rent / electricity / internet regardless of where it was
+// entered: the Add Bill modal stores an explicit bill_type, while the
+// Expense / Investment modal only stores a title. Both must be deducted from
+// the previous month's revenue, so we classify on either signal.
+function fixedBillKind(expense) {
+    const kind = categorizeExpense(expense || {});
+    if (kind === 'rent') return 'Rent';
+    if (kind === 'electric') return 'Electric';
+    if (kind === 'internet') return 'Internet';
+    return '';
+}
 
 function isFixedBillType(expense) {
-    return FIXED_BILL_TYPES.indexOf((expense && expense.bill_type) || '') !== -1;
+    return fixedBillKind(expense) !== '';
 }
 
 function prevMonthKey(key) {

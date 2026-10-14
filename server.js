@@ -163,6 +163,23 @@ function nowStamp() {
 
 const FIXED_BILL_TYPES = ['Rent', 'Electric', 'Internet'];
 
+const FIXED_BILL_PATTERNS = [
+    { kind: 'Rent', re: /\brent\b/i },
+    { kind: 'Electric', re: /\belectric(?:ity)?\b/i },
+    { kind: 'Internet', re: /\binternet\b/i }
+];
+
+// Mirrors fixedBillKind() in public/script.js. Rent / electricity / internet
+// count as fixed bills whether they carry an explicit bill_type (Add Bill
+// modal) or were typed as a plain expense title (Expense / Investment modal).
+function fixedBillKind(expense) {
+    if (!expense) return '';
+    if (FIXED_BILL_TYPES.indexOf(expense.bill_type) !== -1) return expense.bill_type;
+    const text = String(expense.expense_title || expense.category || '');
+    const hit = FIXED_BILL_PATTERNS.find(p => p.re.test(text));
+    return hit ? hit.kind : '';
+}
+
 function toMonthKey(value) {
     const m = String(value || '').match(/^(\d{4})-(\d{2})/);
     return m ? m[1] + '-' + m[2] : '';
@@ -207,7 +224,7 @@ function computeProfitBreakdown(bookings, expenses) {
         if (!key) return;
         const entry = bucketFor(key);
         const amt = Number(x.amount || 0) || 0;
-        if (FIXED_BILL_TYPES.indexOf(x.bill_type) !== -1) entry.fixedBills += amt;
+        if (fixedBillKind(x)) entry.fixedBills += amt;
         else entry.regular += amt;
     });
 
@@ -936,6 +953,8 @@ module.exports = {
     initSystem,
     nextBookingNumber,
     claimOrphanedRecords,
+    computeProfitBreakdown,
+    fixedBillKind,
     validateCredentials,
     defaults: {
         adminUsername: DEFAULT_ADMIN_USERNAME,
