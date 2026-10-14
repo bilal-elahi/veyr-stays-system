@@ -191,6 +191,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!getToken()) showLoginOverlay();
     document.body.classList.add('landing-mode');
 
+    renderClock();
+    setInterval(renderClock, 30000);
+
     document.querySelectorAll('.auth-tab').forEach(btn => {
         btn.addEventListener('click', () => setAuthTab(btn.dataset.authTab));
     });
@@ -852,16 +855,94 @@ function setDashText(id, text) {
     if (el) el.innerText = text;
 }
 
+function renderClock() {
+    const el = document.getElementById('clockPill');
+    if (!el) return;
+    const now = new Date();
+    let h = now.getHours();
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    el.textContent = String(h).padStart(2, '0') + ':' + m + ' ' + ap;
+}
+
+function lastMonthKeys(endKey, count) {
+    const keys = [];
+    let k = endKey;
+    for (let i = 0; i < count && k; i++) { keys.unshift(k); k = prevMonthKey(k); }
+    return keys;
+}
+
+function pctDelta(cur, prev) {
+    if (!prev) return cur > 0 ? 100 : 0;
+    return Math.round(((cur - prev) / prev) * 100);
+}
+
+function setDelta(id, delta, label) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = (delta >= 0 ? '+' : '') + delta + '% ' + (label || 'vs last month');
+    el.classList.toggle('up', delta >= 0);
+    el.classList.toggle('down', delta < 0);
+}
+
+function sparkPoints(values) {
+    const n = values.length;
+    if (n < 2) return '';
+    const w = 120, h = 36, pad = 3;
+    const max = Math.max(1, ...values.map(v => Math.max(0, v)));
+    return values.map((v, i) => {
+        const x = (i / (n - 1)) * (w - 2 * pad) + pad;
+        const y = h - pad - (Math.max(0, v) / max) * (h - 2 * pad);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+}
+
+function setSpark(id, values, color) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const pts = sparkPoints(values);
+    el.innerHTML = pts ? '<polyline points="' + pts + '" style="stroke:' + color + '"></polyline>' : '';
+}
+
+function renderKpiExtras(months, currentMonth, previousMonth) {
+    const keys = lastMonthKeys(currentMonth, 6);
+    const prevPrev = prevMonthKey(previousMonth);
+    const revOf = (k) => (months.find(m => m.month === k) || { revenue: 0 }).revenue;
+    const netOf = (k) => { const m = months.find(x => x.month === k); return m ? m.settledNet : 0; };
+    const expOf = (k) => (allExpensesCache || []).reduce((s, e) =>
+        toMonthKey(e.bill_month || e.expense_date || e.date || e.created_at) === k ? s + Number(e.amount || 0) : s, 0);
+
+    const curRev = revOf(currentMonth), prevRev = revOf(previousMonth);
+    const expCur = expOf(currentMonth), expPrev = expOf(previousMonth);
+    const netCur = netOf(currentMonth), netPrev = netOf(previousMonth);
+
+    setDelta('kpiDeltaCurrent', pctDelta(curRev, prevRev), 'vs last month');
+    setDelta('kpiDeltaPrev', pctDelta(prevRev, revOf(prevPrev)), 'vs earlier month');
+    setDelta('kpiDeltaExp', pctDelta(expCur, expPrev), 'vs last month');
+    setDelta('kpiDeltaProfit', pctDelta(netCur, netPrev), 'vs last month');
+
+    setSpark('sparkCurrent', keys.map(revOf), '#10b981');
+    setSpark('sparkPrev', keys.map(revOf), '#3b82f6');
+    setSpark('sparkExp', keys.map(expOf), '#ef4444');
+    setSpark('sparkProfit', keys.map(netOf), '#d4af37');
+}
+
 function renderDashboard() {
     const now = new Date();
     const hour = now.getHours();
-    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const greeting = hour < 12 ? 'Good Morning,' : hour < 18 ? 'Good Afternoon,' : 'Good Evening,';
     const displayName = (currentUser && (currentUser.property_name || currentUser.username)) || 'there';
 
-    setDashText('dashGreeting', greeting + ', ' + displayName);
-    setDashText('dashPropertyTitle', (currentUser && currentUser.property_name) || 'Your Dashboard');
-    setDashText('dashSubtitle', 'Here is how your property is performing');
+    setDashText('dashGreeting', greeting + ' ' + displayName);
+    setDashText('dashPropertyTitle', (currentUser && currentUser.property_name) || 'VeyR Stays Manager');
+    setDashText('dashSubtitle', 'Manage your stays, track your earnings, and grow your business.');
     setDashText('dashDate', now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+
+    const avatar = document.getElementById('topbarAvatar');
+    if (avatar) avatar.textContent = String(displayName.trim().charAt(0) || 'V').toUpperCase();
+
+    renderClock();
 
     const months = computeMonthlyProfit();
     const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -872,6 +953,7 @@ function renderDashboard() {
     setDashText('dashCurrentRevenueLabel', monthLabel(currentMonth));
     setDashText('dashPrevRevenueLabel', monthLabel(previousMonth));
 
+    renderKpiExtras(months, currentMonth, previousMonth);
     renderExpenseBreakdown();
     renderRecentBookings();
     renderBillsPanel();
@@ -892,25 +974,52 @@ function renderExpenseBreakdown() {
         return;
     }
 
-    const rows = [
-        { key: 'rent', label: 'Rent', cls: 'cat-rent' },
-        { key: 'electric', label: 'Electric', cls: 'cat-electric' },
-        { key: 'internet', label: 'Internet', cls: 'cat-internet' },
-        { key: 'other', label: 'Other', cls: 'cat-other' }
+    const defs = [
+        { key: 'rent', label: 'Rent', color: '#d4af37' },
+        { key: 'electric', label: 'Electricity', color: '#3b82f6' },
+        { key: 'internet', label: 'Internet', color: '#8b5cf6' },
+        { key: 'other', label: 'Maintenance & Other', color: '#10b981' }
     ];
 
-    el.innerHTML = rows.map(r => {
-        const val = cats[r.key] || 0;
-        const pct = Math.round((val / total) * 100);
-        return '<div class="breakdown-row">' +
-            '<div class="breakdown-top">' +
-                '<span class="breakdown-label"><span class="breakdown-dot ' + r.cls + '"></span>' + r.label + '</span>' +
-                '<span class="breakdown-value">' + formatPKR(val) + '</span>' +
-            '</div>' +
-            '<div class="breakdown-track"><span class="breakdown-fill ' + r.cls + '" style="width:' + pct + '%"></span></div>' +
-            '<span class="breakdown-pct">' + pct + '%</span>' +
+    let acc = 0;
+    const stops = defs.map(d => {
+        const pct = ((cats[d.key] || 0) / total) * 100;
+        const start = acc;
+        acc += pct;
+        return d.color + ' ' + start.toFixed(2) + '% ' + acc.toFixed(2) + '%';
+    });
+
+    const legend = defs.map(d => {
+        const val = cats[d.key] || 0;
+        const pct = Math.round((val / total) * 1000) / 10;
+        return '<div class="legend-row">' +
+            '<span class="sw" style="background:' + d.color + '"></span>' +
+            '<span class="legend-name">' + d.label + '</span>' +
+            '<span class="legend-amt">' + formatPKR(val) + '</span>' +
+            '<span class="legend-pct">' + pct + '%</span>' +
         '</div>';
     }).join('');
+
+    el.innerHTML =
+        '<div class="donut" style="background:conic-gradient(' + stops.join(',') + ')">' +
+            '<div class="donut-hole">' +
+                '<span class="donut-total-label">Total</span>' +
+                '<strong class="donut-total">' + formatPKR(total) + '</strong>' +
+            '</div>' +
+        '</div>' +
+        '<div class="donut-legend">' + legend + '</div>';
+}
+
+function bookingStayStatus(b) {
+    const now = Date.now();
+    const ci = Date.parse(String(b.check_in_date || b.checkInDate || ''));
+    const co = Date.parse(String(b.checkOutDate || ''));
+    if (!isNaN(co) && now > co) return { text: 'Checked Out', cls: 'badge-checkedout' };
+    if (!isNaN(ci) && now >= ci && (isNaN(co) || now <= co)) return { text: 'Checked In', cls: 'badge-checkedin' };
+    if (!isNaN(ci) && now < ci) return { text: 'Upcoming', cls: 'badge-upcoming' };
+    const ps = b.payment_status || 'Paid';
+    if (ps === 'Pending') return { text: 'Pending', cls: 'badge-pending' };
+    return { text: 'Checked In', cls: 'badge-checkedin' };
 }
 
 function renderRecentBookings() {
@@ -919,28 +1028,24 @@ function renderRecentBookings() {
 
     const items = (allBookingsCache || []).slice(0, 5);
     if (!items.length) {
-        el.innerHTML = '<div class="empty-state">No bookings yet</div>';
+        el.innerHTML = '<tr><td colspan="5" class="empty-state">No bookings yet</td></tr>';
         return;
     }
 
     el.innerHTML = items.map(b => {
         const name = b.guest_name || b.guestName || 'Guest';
         const room = b.roomNumber || 'N/A';
-        const dateStr = String(b.check_in_date || b.checkInDate || b.created_at || '').replace('T', ' ');
-        const status = b.payment_status || 'Paid';
-        const amount = b.payment_amount !== undefined && b.payment_amount !== null ? b.payment_amount : (b.amount || 0);
+        const ci = String(b.check_in_date || b.checkInDate || '').replace('T', ' ');
+        const co = String(b.checkOutDate || '').replace('T', ' ');
+        const st = bookingStayStatus(b);
         const initial = esc(String(name).trim().charAt(0).toUpperCase() || '?');
-        return '<div class="dash-list-item">' +
-            '<div class="dash-avatar">' + initial + '</div>' +
-            '<div class="dash-list-main">' +
-                '<strong>' + esc(name) + '</strong>' +
-                '<span class="dash-list-sub">Room ' + esc(room) + ' &middot; ' + esc(dateStr) + '</span>' +
-            '</div>' +
-            '<div class="dash-list-side">' +
-                '<span class="badge ' + (status === 'Pending' ? 'badge-pending' : 'badge-paid') + '">' + esc(status) + '</span>' +
-                '<span class="dash-list-amount">' + Number(amount).toLocaleString() + ' PKR</span>' +
-            '</div>' +
-        '</div>';
+        return '<tr>' +
+            '<td data-label="Guest Name"><span class="guest-cell"><span class="guest-avatar">' + initial + '</span>' + esc(name) + '</span></td>' +
+            '<td data-label="Apartment">' + esc(room) + '</td>' +
+            '<td data-label="Check In">' + esc(ci) + '</td>' +
+            '<td data-label="Check Out">' + esc(co) + '</td>' +
+            '<td data-label="Status"><span class="badge ' + st.cls + '">' + st.text + '</span></td>' +
+        '</tr>';
     }).join('');
 }
 
@@ -949,43 +1054,44 @@ function renderBillsPanel() {
     if (!el) return;
 
     const config = (allDataCache && allDataCache.monthlyConfig) || {};
-    const parts = [];
+    const now = new Date();
+    const curMon = now.toLocaleDateString(undefined, { month: 'short' });
+    const rows = [];
 
-    const billDefs = [
-        { label: 'Rent', val: Number(config.rent) || 0 },
-        { label: 'Electric', val: Number(config.electric) || 0 },
-        { label: 'Internet', val: Number(config.internet) || 0 }
-    ].filter(b => b.val > 0);
+    [['Rent', config.rent], ['Electric', config.electric], ['Internet', config.internet]]
+        .forEach(([label, val]) => {
+            if (Number(val) > 0) {
+                rows.push({ day: '01', mon: curMon, title: label, amount: Number(val), status: 'Due', cls: 'is-due' });
+            }
+        });
 
-    if (billDefs.length) {
-        parts.push('<p class="dash-list-title">Monthly auto bills</p>');
-        parts.push(billDefs.map(b =>
-            '<div class="dash-bill-row">' +
-                '<span class="dash-bill-label"><span class="breakdown-dot cat-fixed"></span>' + b.label + '</span>' +
-                '<span class="dash-bill-amount">' + Number(b.val).toLocaleString() + ' PKR</span>' +
-            '</div>'
-        ).join(''));
+    (allExpensesCache || []).slice(0, 4).forEach(e => {
+        const raw = e.expense_date || e.date || e.created_at || '';
+        const d = new Date(raw);
+        const valid = !isNaN(d.getTime());
+        rows.push({
+            day: valid ? String(d.getDate()).padStart(2, '0') : '--',
+            mon: valid ? d.toLocaleDateString(undefined, { month: 'short' }) : '',
+            title: e.expense_title || e.bill_type || 'Expense',
+            amount: Number(e.amount || 0),
+            status: 'Paid',
+            cls: 'is-paid'
+        });
+    });
+
+    if (!rows.length) {
+        el.innerHTML = '<div class="empty-state">No bills or expenses yet</div>';
+        return;
     }
 
-    const recent = (allExpensesCache || []).slice(0, 5);
-    parts.push('<p class="dash-list-title">Recent expenses</p>');
-    if (recent.length) {
-        parts.push(recent.map(e => {
-            const title = e.expense_title || e.bill_type || 'Expense';
-            const dateStr = String(e.expense_date || e.date || e.created_at || '');
-            return '<div class="dash-list-item compact">' +
-                '<div class="dash-list-main">' +
-                    '<strong>' + esc(title) + '</strong>' +
-                    '<span class="dash-list-sub">' + esc(dateStr) + '</span>' +
-                '</div>' +
-                '<span class="dash-list-amount">' + Number(e.amount || 0).toLocaleString() + ' PKR</span>' +
-            '</div>';
-        }).join(''));
-    } else {
-        parts.push('<div class="empty-state">No expenses yet</div>');
-    }
-
-    el.innerHTML = parts.join('');
+    el.innerHTML = rows.map(r =>
+        '<div class="bill-item">' +
+            '<span class="bill-date"><strong>' + r.day + '</strong><small>' + esc(r.mon) + '</small></span>' +
+            '<span class="bill-main"><strong>' + esc(r.title) + '</strong></span>' +
+            '<span class="bill-amount">' + Number(r.amount).toLocaleString() + ' PKR</span>' +
+            '<span class="bill-status ' + r.cls + '">' + r.status + '</span>' +
+        '</div>'
+    ).join('');
 }
 
 function toMonthKey(value) {
@@ -1005,6 +1111,13 @@ function monthLabel(key) {
 
 function formatPKR(value) {
     return Number(value || 0).toLocaleString() + ' PKR';
+}
+
+function shortNum(value) {
+    const n = Number(value) || 0;
+    if (Math.abs(n) >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+    if (Math.abs(n) >= 1000) return (n / 1000).toFixed(0) + 'K';
+    return String(Math.round(n));
 }
 
 const FIXED_BILL_TYPES = ['Rent', 'Electric', 'Internet'];
@@ -1160,13 +1273,19 @@ function renderMonthlyProfit() {
             '</tr>';
     }).join('');
 
-    const maxValue = Math.max(1, ...months.map(m => Math.max(m.revenue, m.totalDeductions)));
+    const maxValue = Math.max(1, ...months.map(m => Math.max(m.revenue, m.settledNet, 0)));
+    const axis = document.getElementById('chartAxis');
+    if (axis) {
+        const top = Math.max(100000, Math.ceil(maxValue / 100000) * 100000);
+        axis.innerHTML = [1, 0.75, 0.5, 0.25, 0].map(f => '<span>' + shortNum(top * f) + '</span>').join('');
+    }
     chart.innerHTML = months.map(m => {
         const active = m.month === profitFocusMonth ? ' is-active' : '';
+        const profitH = Math.max(0, m.settledNet);
         return '<button type="button" class="profit-col' + active + '" onclick="toggleProfitFocus(\'' + m.month + '\')" title="' + m.month + '">' +
             '<span class="profit-col-bars">' +
                 '<span class="profit-bar bar-revenue" title="Revenue ' + formatPKR(m.revenue) + '" style="height:' + Math.round((m.revenue / maxValue) * 100) + '%"></span>' +
-                '<span class="profit-bar bar-expense" title="Deductions ' + formatPKR(m.totalDeductions) + '" style="height:' + Math.round((m.totalDeductions / maxValue) * 100) + '%"></span>' +
+                '<span class="profit-bar bar-profit" title="Profit ' + formatPKR(m.settledNet) + '" style="height:' + Math.round((profitH / maxValue) * 100) + '%"></span>' +
             '</span>' +
             '<span class="profit-col-label">' + monthLabel(m.month) + '</span>' +
             '<span class="profit-col-net val-' + (m.settledNet >= 0 ? 'gain' : 'loss') + '">' + (m.settledNet >= 0 ? '+' : '-') + formatPKR(Math.abs(m.settledNet)).replace(' PKR', '') + '</span>' +

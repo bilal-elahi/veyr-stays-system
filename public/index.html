@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Veyr Stays System</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231d4ed8'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='white'>V</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0e1a'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='%23d4af37'>V</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -49,107 +49,162 @@
         </div>
     </div>
     <div class="app-container">
-        <header class="app-header">
-            <div class="app-brand">
-                <img src="/veyr%20stays.jpeg" alt="Veyr Stays" class="app-logo">
-                <div class="app-brand-text-group">
-                    <span class="app-brand-text">Veyr Stays</span>
-                    <span class="app-property" id="headerPropertyName"></span>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
+                </span>
+                <div class="brand-copy">
+                    <span class="brand-name">VeyR Stays</span>
+                    <span class="brand-sub">MANAGER</span>
                 </div>
             </div>
-        </header>
-        <div class="controls" id="controls">
-        <div class="action-bar">
-            <button id="openBookingModal" class="btn-primary">+ Add Booking</button>
-            <button id="openBillModal" class="btn-secondary">+ Add Bill</button>
-            <button id="openFinanceModal" class="btn-secondary">+ Expense / Investment</button>
-            <button id="exportBtn" class="btn-secondary">Download</button>
-            <button id="refreshBtn" class="btn-secondary">Refresh</button>
-            <button id="openAdminModal" class="btn-secondary" style="display:none">Admin</button>
-            <button id="openConfigModal" class="btn-secondary">Settings</button>
-        </div>
+            <div class="brand-property" id="headerPropertyName"></div>
 
-        <div class="view-bar" id="viewBar">
-            <button type="button" class="view-btn" data-view="summary">Summary</button>
-            <button type="button" class="view-btn" data-view="bookings">Bookings</button>
-            <button type="button" class="view-btn" data-view="expenses">Expenses</button>
-            <button type="button" class="view-btn" data-view="investments">Investments</button>
-        </div>
-        </div>
+            <nav class="sidebar-nav">
+                <p class="nav-heading">Menu</p>
+                <button type="button" class="view-btn nav-item" data-view="summary">
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    <span>Dashboard</span>
+                </button>
+                <button type="button" class="view-btn nav-item" data-view="bookings">
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Bookings</span>
+                </button>
+                <button type="button" class="view-btn nav-item" data-view="expenses">
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    <span>Expenses</span>
+                </button>
+                <button type="button" class="view-btn nav-item" data-view="investments">
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
+                    <span>Investments</span>
+                </button>
+                <button type="button" class="nav-item is-soon" disabled>
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+                    <span>Apartments</span><span class="soon">Soon</span>
+                </button>
+                <button type="button" class="nav-item is-soon" disabled>
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                    <span>Bills</span><span class="soon">Soon</span>
+                </button>
+                <button type="button" class="nav-item is-soon" disabled>
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
+                    <span>Reports</span><span class="soon">Soon</span>
+                </button>
+                <button type="button" class="nav-item" id="openConfigModal">
+                    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Settings</span>
+                </button>
+            </nav>
 
-        <div class="main-content">
+            <div class="sidebar-actions">
+                <p class="nav-heading">Quick Actions</p>
+                <button id="openBookingModal" class="btn-primary side-btn">+ Add Booking</button>
+                <button id="openBillModal" class="btn-secondary side-btn">+ Add Bill</button>
+                <button id="openFinanceModal" class="btn-secondary side-btn">+ Expense / Investment</button>
+                <button id="exportBtn" class="btn-secondary side-btn">Download</button>
+                <button id="refreshBtn" class="btn-secondary side-btn">Refresh</button>
+                <button id="openAdminModal" class="btn-secondary side-btn" style="display:none">Admin</button>
+            </div>
+
+            <div class="sidebar-foot">
+                <div class="foot-wave" aria-hidden="true"></div>
+                <p class="foot-tagline">Better Stays. Higher Returns.</p>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar">
+                <div class="topbar-greeting">
+                    <h1 class="topbar-title" id="dashGreeting">Good Morning</h1>
+                    <p class="topbar-sub" id="dashSubtitle">Manage your stays, track your earnings, and grow your business.</p>
+                </div>
+                <div class="topbar-meta">
+                    <span class="meta-pill" id="dashDate">&mdash;</span>
+                    <span class="meta-pill" id="clockPill">--:--</span>
+                    <span class="topbar-avatar" id="topbarAvatar">V</span>
+                </div>
+            </header>
+
+            <div class="main-content">
+                <div class="landing-placeholder">Select a section from the menu to get started.</div>
         <div id="view-summary" class="app-view">
-        <!-- Dashboard hero: welcome + current date -->
-        <section class="dash-hero">
-            <div class="dash-hero-text">
-                <p class="dash-eyebrow" id="dashGreeting">Welcome back</p>
-                <h1 class="dash-title" id="dashPropertyTitle">Dashboard</h1>
-                <p class="dash-subtitle" id="dashSubtitle">Your property at a glance</p>
-            </div>
-            <div class="dash-hero-meta">
-                <span class="dash-date-label">Today</span>
-                <span class="dash-date" id="dashDate">&mdash;</span>
-            </div>
+        <!-- Row 1: KPI cards -->
+        <section class="kpi-grid">
+            <article class="kpi-card is-green">
+                <div class="kpi-head">
+                    <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+                    <span class="kpi-label">Current Month Revenue</span>
+                </div>
+                <p class="kpi-value" id="dashCurrentRevenue">0 PKR</p>
+                <div class="kpi-foot">
+                    <span class="kpi-delta up" id="kpiDeltaCurrent">+0% vs last month</span>
+                    <span class="kpi-note" id="dashCurrentRevenueLabel"></span>
+                </div>
+                <svg class="kpi-spark" id="sparkCurrent" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </article>
+            <article class="kpi-card is-blue">
+                <div class="kpi-head">
+                    <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+                    <span class="kpi-label">Previous Month Revenue</span>
+                </div>
+                <p class="kpi-value" id="dashPrevRevenue">0 PKR</p>
+                <div class="kpi-foot">
+                    <span class="kpi-delta up" id="kpiDeltaPrev">+0% vs earlier month</span>
+                    <span class="kpi-note" id="dashPrevRevenueLabel"></span>
+                </div>
+                <svg class="kpi-spark" id="sparkPrev" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </article>
+            <article class="kpi-card is-red">
+                <div class="kpi-head">
+                    <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                    <span class="kpi-label">Total Expenses</span>
+                </div>
+                <p class="kpi-value" id="totalExpenses">0 PKR</p>
+                <div class="kpi-foot">
+                    <span class="kpi-delta up" id="kpiDeltaExp">+0% vs last month</span>
+                    <span class="kpi-note">All time (incl. auto bills)</span>
+                </div>
+                <svg class="kpi-spark" id="sparkExp" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </article>
+            <article class="kpi-card is-gold">
+                <div class="kpi-head">
+                    <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg></span>
+                    <span class="kpi-label">Net Profit</span>
+                </div>
+                <p class="kpi-value" id="netProfit">0 PKR</p>
+                <div class="kpi-foot">
+                    <span class="kpi-delta up" id="kpiDeltaProfit">+0% vs last month</span>
+                    <span class="kpi-note">All time</span>
+                </div>
+                <svg class="kpi-spark" id="sparkProfit" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </article>
         </section>
 
-        <!-- Financial Summary Cards -->
-        <section class="metrics-grid">
-            <div class="metric-card accent-primary">
-                <span class="metric-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                </span>
-                <h3>Current Month Revenue</h3>
-                <p id="dashCurrentRevenue">0 PKR</p>
-                <span class="metric-sub" id="dashCurrentRevenueLabel"></span>
-            </div>
-            <div class="metric-card accent-success">
-                <span class="metric-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                </span>
-                <h3>Previous Month Revenue</h3>
-                <p id="dashPrevRevenue">0 PKR</p>
-                <span class="metric-sub" id="dashPrevRevenueLabel"></span>
-            </div>
-            <div class="metric-card accent-warning">
-                <span class="metric-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </span>
-                <h3>Total Expenses</h3>
-                <p id="totalExpenses">0 PKR</p>
-                <span class="metric-sub">All time (incl. auto bills)</span>
-            </div>
-            <div class="metric-card accent-primary">
-                <span class="metric-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
-                </span>
-                <h3>Net Profit</h3>
-                <p id="netProfit">0 PKR</p>
-                <span class="metric-sub">All time</span>
-            </div>
-            <div class="metric-card" id="totalBookingsCard" style="cursor:pointer" title="Click to show all bookings">
+        <!-- Secondary metrics -->
+        <section class="mini-metrics">
+            <div class="mini-card" id="totalBookingsCard" style="cursor:pointer" title="Click to show all bookings">
                 <h3>Total Bookings</h3>
                 <p id="totalBookings">0</p>
-                <span class="metric-sub">Tap to view bookings</span>
             </div>
-            <div class="metric-card">
+            <div class="mini-card">
                 <h3>Total Revenue</h3>
                 <p id="totalRevenue">0 PKR</p>
-                <span class="metric-sub">All time</span>
             </div>
-            <div class="metric-card accent-warning" id="pendingRevenueCard" style="cursor:pointer" title="Click to show/hide pending bookings">
+            <div class="mini-card" id="pendingRevenueCard" style="cursor:pointer" title="Click to show/hide pending bookings">
                 <h3>Pending Revenue</h3>
                 <p id="pendingRevenue">0 PKR</p>
-                <span class="metric-sub">Tap to filter pending</span>
             </div>
-            <div class="metric-card">
+            <div class="mini-card">
                 <h3>Total Investments</h3>
                 <p id="totalInvestments">0 PKR</p>
-                <span class="metric-sub">All time</span>
             </div>
         </section>
 
-        <!-- Monthly Revenue & Profit + Expense Breakdown -->
-        <div class="dash-grid">
+
+
+        <!-- Row 2: analytics + quick actions -->
+        <div class="analytics-grid">
             <section class="card-section" id="overviewSection">
                 <div class="section-header">
                     <h2>Monthly Revenue &amp; Profit</h2>
@@ -160,10 +215,13 @@
                     </div>
                 </div>
                 <p class="profit-period" id="profitPeriodLabel"></p>
-                <div class="profit-chart" id="profitChart"></div>
+                <div class="chart-box">
+                    <div class="chart-axis" id="chartAxis"></div>
+                    <div class="profit-chart" id="profitChart"></div>
+                </div>
                 <div class="chart-legend">
                     <span class="legend-item"><span class="legend-swatch bar-revenue"></span>Revenue</span>
-                    <span class="legend-item"><span class="legend-swatch bar-expense"></span>Deductions</span>
+                    <span class="legend-item"><span class="legend-swatch bar-profit"></span>Profit</span>
                 </div>
             </section>
 
@@ -174,6 +232,35 @@
                 </div>
                 <div class="expense-breakdown" id="expenseBreakdown"></div>
             </section>
+
+            <aside class="quick-panel">
+                <h2 class="quick-title">&#9889; Quick Actions</h2>
+                <button type="button" class="quick-item" onclick="document.getElementById('openBookingModal').click()">
+                    <span class="quick-ico">+</span>
+                    <span class="quick-copy"><strong>Add Booking</strong><small>New reservation</small></span>
+                    <span class="quick-chev">&rsaquo;</span>
+                </button>
+                <button type="button" class="quick-item" data-goto-view="bookings">
+                    <span class="quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                    <span class="quick-copy"><strong>Booking List</strong><small>View all bookings</small></span>
+                    <span class="quick-chev">&rsaquo;</span>
+                </button>
+                <button type="button" class="quick-item" onclick="document.getElementById('openBillModal').click()">
+                    <span class="quick-ico">+</span>
+                    <span class="quick-copy"><strong>Add Bill</strong><small>Rent, electricity, internet</small></span>
+                    <span class="quick-chev">&rsaquo;</span>
+                </button>
+                <button type="button" class="quick-item" onclick="document.getElementById('openFinanceModal').click()">
+                    <span class="quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                    <span class="quick-copy"><strong>Expense / Investment</strong><small>Add new expense</small></span>
+                    <span class="quick-chev">&rsaquo;</span>
+                </button>
+                <button type="button" class="quick-item" data-goto-view="expenses">
+                    <span class="quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg></span>
+                    <span class="quick-copy"><strong>Expense List</strong><small>View all expenses</small></span>
+                    <span class="quick-chev">&rsaquo;</span>
+                </button>
+            </aside>
         </div>
 
         <!-- Month-wise Profit Breakdown -->
@@ -229,24 +316,48 @@
             </div>
         </section>
 
-        <!-- Recent Bookings + Bills & Expenses -->
-        <div class="dash-grid">
+        <!-- Row 3: recent bookings + upcoming bills -->
+        <div class="dash-grid two">
             <section class="card-section" id="recentBookingsSection">
                 <div class="section-header">
                     <h2>Recent Bookings</h2>
-                    <button type="button" class="btn-secondary btn-sm" data-goto-view="bookings">View all</button>
+                    <button type="button" class="btn-secondary btn-sm" data-goto-view="bookings">View All</button>
                 </div>
-                <div class="dash-list" id="recentBookings"></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Guest Name</th>
+                                <th>Apartment</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentBookings"></tbody>
+                    </table>
+                </div>
             </section>
 
             <section class="card-section" id="billsSection">
                 <div class="section-header">
-                    <h2>Bills &amp; Expenses</h2>
-                    <button type="button" class="btn-secondary btn-sm" data-goto-view="expenses">View all</button>
+                    <h2>Upcoming Bills &amp; Expenses</h2>
+                    <button type="button" class="btn-secondary btn-sm" data-goto-view="expenses">View All</button>
                 </div>
                 <div class="dash-list" id="upcomingBills"></div>
             </section>
         </div>
+
+        <!-- Row 4: promotional banner -->
+        <section class="promo-banner">
+            <div class="promo-visual" aria-hidden="true"></div>
+            <div class="promo-copy">
+                <span class="promo-brand" id="dashPropertyTitle">VeyR Stays Manager</span>
+                <h2 class="promo-title">Your Property. Our Priority.</h2>
+                <p class="promo-text">Simplify your apartment management with easy bookings, smart tracking and clear financial insights &mdash; all in one place.</p>
+            </div>
+            <div class="promo-badge">Stay Profitable</div>
+        </section>
         </div>
 
         <!-- Bookings Section with Search & Responsive Scroll Wrapper -->
@@ -386,8 +497,9 @@
                 </div>
             </div>
         </section>
+            </div>
+        </div>
     </div>
-</div>
 
     <!-- Booking Modal -->
     <div id="bookingModal" class="modal">
